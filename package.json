@@ -23,9 +23,11 @@
     "output"
   ],
   "author": "mizuko",
+  "homepage": "https://paput.io",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE.txt"
   ],
   "license": "MIT",
   "dependencies": {
@@ -38,5 +40,8 @@
     "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
+  },
+  "volta": {
+    "node": "20.12.2"
   }
 }
