@@ -22,7 +22,11 @@
     "memo",
     "output"
   ],
-  "author": "",
+  "author": "mizuko",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.11.0",

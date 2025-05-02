@@ -9,7 +9,7 @@ export class MCPServer {
   constructor() {
     // 環境変数の取得
     const apiKey = process.env.PAPUT_API_KEY;
-    const apiUrl = process.env.PAPUT_API_URL ?? 'http://localhost:8080';
+    const apiUrl = process.env.PAPUT_API_URL ?? 'https://api.paput.io';
 
     if (!apiKey) {
       throw new Error('PAPUT_API_KEY environment variable is not set');
