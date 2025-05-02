@@ -1,12 +1,13 @@
 # PaPut MCP サーバー
 
-PaPut サービスと連携する Model Context Protocol (MCP) サーバーです。AI アシスタント（Windsurf、Cursor、Claude Desktop 等）から PaPut にメモを作成することができます。
+[PaPut](https://paput.io) と連携する Model Context Protocol (MCP) サーバーです。
+AI アシスタント（Windsurf、Cursor、Claude Desktop 等）から PaPut にメモを作成することができます。
 
 ## 機能
 
 - AI アシスタントから PaPut にメモを作成
-- メモにカテゴリを設定
-- メモの公開/非公開設定
+  - メモにカテゴリを設定
+  - メモの公開/非公開設定
 
 ## インストール
 
@@ -26,7 +27,7 @@ npx paput-mcp
 
 ### Windsurf での設定
 
-`~/.codeium/windsurf/mcp_config.json` に以下を追加します:
+API キーは PaPut の設定画面から取得できます。
 
 ```json
 "mcpServers": {
@@ -40,11 +41,7 @@ npx paput-mcp
 }
 ```
 
-API キーは PaPut の設定画面から取得できます。
-
 ### Cursor での設定
-
-設定（⚙️）から「Settings」を開き、「AI: MCP Servers」の項目を編集します:
 
 ```json
 "ai.mcpServers": [
@@ -61,8 +58,6 @@ API キーは PaPut の設定画面から取得できます。
 
 ### Claude Desktop での設定
 
-設定から「拡張機能」→「MCP サーバー」を選択し、以下の情報を入力:
-
 - 名前: `paput`
 - コマンド: `npx`
 - 引数: `-y paput-mcp`
@@ -70,10 +65,11 @@ API キーは PaPut の設定画面から取得できます。
 
 ## 使用方法
 
-設定が完了すると、AI アシスタントに以下のようにリクエストできます:
+設定が完了すると、AI アシスタントに以下のようにリクエストできます。
 
 ```
-このメモをpaputに保存してください：
+このメモをpaputに保存してください。
+
 タイトル：テストメモ
 内容：これはテスト用のメモです
 カテゴリ：テスト
