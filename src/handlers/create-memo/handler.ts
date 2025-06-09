@@ -1,5 +1,5 @@
-import { ApiService } from '../services/index.js';
-import { CreateMemoParams } from '../types/index.js';
+import { ApiService } from '../../services/index.js';
+import { CreateMemoParams } from '../../types/index.js';
 
 export async function handleCreateMemo(
   args: Record<string, unknown> | undefined,
@@ -18,7 +18,7 @@ export async function handleCreateMemo(
   }
 
   // パラメータの検証
-  if (typeof args.title !== 'string' || typeof args.content !== 'string') {
+  if (typeof args.title !== 'string' || typeof args.body !== 'string') {
     return {
       content: [
         {
@@ -33,15 +33,15 @@ export async function handleCreateMemo(
   // パラメータの構築
   const params: CreateMemoParams = {
     title: args.title,
-    content: args.content,
+    body: args.body,
     is_public: typeof args.is_public === 'boolean' ? args.is_public : false,
   };
 
   // カテゴリの処理
   if (Array.isArray(args.categories)) {
-    params.categories = args.categories.filter(
-      (item): item is string => typeof item === 'string',
-    );
+    params.categories = args.categories
+      .filter((item): item is string => typeof item === 'string')
+      .map((name) => ({ name }));
   }
 
   try {

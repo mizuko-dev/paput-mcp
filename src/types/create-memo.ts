@@ -1,8 +1,8 @@
 export interface CreateMemoParams {
   title: string;
-  content: string;
+  body: string;
   is_public?: boolean;
-  categories?: string[];
+  categories?: Array<{ id?: number; name: string }>;
 }
 
 export interface CreateMemoResponse {
