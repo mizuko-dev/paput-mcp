@@ -24,6 +24,7 @@ export class MCPServer {
       {
         capabilities: {
           tools: {},
+          resources: {},
         },
       },
     );

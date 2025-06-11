@@ -64,7 +64,7 @@ export async function handleSearchMemo(
             : '';
         const visibility = memo.is_public ? '公開' : '非公開';
 
-        return `【${memo.title}】(${visibility})
+        return `【${memo.title}】(ID: ${memo.id}, ${visibility})
 ${categories}
 ${memo.body}
 (作成日: ${memo.created_at})`;
