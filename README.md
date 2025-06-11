@@ -1,13 +1,26 @@
 # PaPut MCP サーバー
 
 [PaPut](https://paput.io) と連携する Model Context Protocol (MCP) サーバーです。
-AI アシスタント（Windsurf、Cursor、Claude Desktop 等）から PaPut にメモを作成することができます。
+AI アシスタント（Windsurf、Cursor、Claude Desktop 等）から PaPut の様々な機能を利用できます。
 
 ## 機能
 
-- AI アシスタントから PaPut にメモを作成
-  - メモにカテゴリを設定
-  - メモの公開/非公開設定
+### メモ管理
+- メモの作成、検索、取得、更新、削除
+- カテゴリの設定と管理
+- 公開/非公開設定
+
+### ノート管理
+- ノートの作成、検索、取得、更新、削除
+- メモとの関連付け
+
+### アイデア管理
+- アイデアの作成、一覧表示、削除
+
+### スキルシート管理
+- スキルシートの作成、取得、更新
+- プロジェクト情報の管理
+- スキル情報の管理
 
 ## インストール
 
@@ -41,8 +54,27 @@ API キーは PaPut の設定画面から取得できます。
 
 ## 使用方法
 
-設定が完了したら、AI アシスタントにリクエストできます。
-以下推奨する使用方法です。
+設定が完了したら、AI アシスタントから以下のツールを利用できます：
+
+### 利用可能なツール
+
+- `paput_create_memo` - メモを作成
+- `paput_search_memo` - メモを検索
+- `paput_get_memo` - メモの詳細を取得
+- `paput_update_memo` - メモを更新
+- `paput_get_categories` - カテゴリー一覧を取得
+- `paput_create_note` - ノートを作成
+- `paput_search_notes` - ノートを検索
+- `paput_get_note` - ノートの詳細を取得
+- `paput_update_note` - ノートを更新
+- `paput_list_ideas` - アイデア一覧を取得
+- `paput_create_idea` - アイデアを作成
+- `paput_delete_idea` - アイデアを削除
+- `paput_get_skill_sheet` - スキルシートを取得
+- `paput_create_skill_sheet` - スキルシートを作成
+- `paput_update_skill_sheet` - スキルシートを更新
+
+以下、推奨する使用方法です。
 
 ### AI アシスタントのルール設定
 
