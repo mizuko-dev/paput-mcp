@@ -7,6 +7,7 @@ export interface UpdateMemoParams {
     id?: number;
     name: string;
   }>;
+  projects?: Array<{ id: number; title?: string }>;
 }
 
 export interface UpdateMemoResponse {

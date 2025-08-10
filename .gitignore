@@ -7,3 +7,5 @@ dist/
 .claude/*
 .mcp.json
 CLAUDE.md
+
+.serena/*

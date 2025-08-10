@@ -23,7 +23,8 @@ export async function handleUpdateSkillSheet(
     try {
       existingSheet = await apiService.getSkillSheet();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+      const errorMessage =
+        error instanceof Error ? error.message : '不明なエラー';
       if (errorMessage.includes('404') || errorMessage.includes('not found')) {
         return {
           content: [
@@ -96,7 +97,8 @@ export async function handleUpdateSkillSheet(
     if (typeof args.nearest_station === 'string') updateInfo.push('最寄り駅');
     if (typeof args.gender === 'number') updateInfo.push('性別');
     if (typeof args.birth_date === 'string') updateInfo.push('生年月日');
-    if (typeof args.years_of_experience === 'number') updateInfo.push('経験年数');
+    if (typeof args.years_of_experience === 'number')
+      updateInfo.push('経験年数');
     if (typeof args.self_pr === 'string') updateInfo.push('自己PR');
     if (Array.isArray(args.skills)) updateInfo.push('スキル');
     if (Array.isArray(args.projects)) updateInfo.push('プロジェクト');

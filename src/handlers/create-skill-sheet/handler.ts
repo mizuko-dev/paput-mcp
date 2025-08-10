@@ -36,7 +36,8 @@ export async function handleCreateSkillSheet(
 
   // パラメータの構築
   const params: CreateSkillSheetParams = {
-    nearest_station: typeof args.nearest_station === 'string' ? args.nearest_station : null,
+    nearest_station:
+      typeof args.nearest_station === 'string' ? args.nearest_station : null,
     gender: args.gender,
     birth_date: args.birth_date,
     years_of_experience: args.years_of_experience,

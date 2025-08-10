@@ -54,6 +54,7 @@ export class ApiService {
           body: params.body,
           is_public: params.is_public || false,
           categories: params.categories || [],
+          projects: params.projects || [],
         }),
       });
 
@@ -158,6 +159,7 @@ export class ApiService {
           body: params.body,
           is_public: params.is_public,
           categories: params.categories,
+          projects: params.projects,
         }),
       });
 
@@ -510,13 +512,34 @@ export class ApiService {
     }
 
     const data = await response.json();
-    
+
     // Validate the response has the expected structure
     if (!data || typeof data.id !== 'number') {
       throw new Error('Invalid skill sheet response format');
     }
 
     return data as GetSkillSheetResponse;
+  }
+
+  async searchProjects(
+    search: string,
+  ): Promise<Array<{ id: number; title: string }>> {
+    const response = await fetch(
+      `${this.apiUrl}/api/v1/mcp/skill-sheet/projects?search=${encodeURIComponent(search)}`,
+      {
+        method: 'GET',
+        headers: {
+          'X-API-Key': this.apiKey,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to search projects: ${response.statusText}`);
+    }
+
+    const projects = await response.json();
+    return projects;
   }
 
   async createSkillSheet(

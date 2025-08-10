@@ -9,35 +9,49 @@ export async function handleGetSkillSheet(
     const skillSheet = await apiService.getSkillSheet();
 
     // スキル情報のフォーマット
-    const skillsText = skillSheet.skills.length > 0
-      ? skillSheet.skills.map(skill => {
-          const categoryType = CATEGORY_TYPE[skill.category_type as keyof typeof CATEGORY_TYPE] || `タイプ${skill.category_type}`;
-          return `  - ${skill.category.name} (${categoryType}): ${skill.level} (${skill.years}年)`;
-        }).join('\n')
-      : '  なし';
+    const skillsText =
+      skillSheet.skills.length > 0
+        ? skillSheet.skills
+            .map((skill) => {
+              const categoryType =
+                CATEGORY_TYPE[
+                  skill.category_type as keyof typeof CATEGORY_TYPE
+                ] || `タイプ${skill.category_type}`;
+              return `  - ${skill.category.name} (${categoryType}): ${skill.level} (${skill.years}年)`;
+            })
+            .join('\n')
+        : '  なし';
 
     // プロジェクト情報のフォーマット
-    const projectsText = skillSheet.projects.length > 0
-      ? skillSheet.projects.map(project => {
-          const period = project.end_period 
-            ? `${project.start_period} - ${project.end_period}`
-            : `${project.start_period} - 現在`;
-          const projectType = PROJECT_TYPE[project.type as keyof typeof PROJECT_TYPE] || `タイプ${project.type}`;
-          const techNames = project.technologies.map(t => t.name).join(', ');
-          const memoNames = project.memos.map(m => m.title).join(', ');
-          
-          return `  【${project.title}】(ID: ${project.id}, ${projectType})
+    const projectsText =
+      skillSheet.projects.length > 0
+        ? skillSheet.projects
+            .map((project) => {
+              const period = project.end_period
+                ? `${project.start_period} - ${project.end_period}`
+                : `${project.start_period} - 現在`;
+              const projectType =
+                PROJECT_TYPE[project.type as keyof typeof PROJECT_TYPE] ||
+                `タイプ${project.type}`;
+              const techNames = project.technologies
+                .map((t) => t.name)
+                .join(', ');
+              const memoNames = project.memos.map((m) => m.title).join(', ');
+
+              return `  【${project.title}】(ID: ${project.id}, ${projectType})
     期間: ${period}
     役割: ${project.role}
     規模: ${project.scale}
     説明: ${project.description}
     技術: ${techNames || 'なし'}
     メモ: ${memoNames || 'なし'}`;
-        }).join('\n\n')
-      : '  なし';
+            })
+            .join('\n\n')
+        : '  なし';
 
     // 性別の表示
-    const genderText = GENDER[skillSheet.gender as keyof typeof GENDER] || `その他`;
+    const genderText =
+      GENDER[skillSheet.gender as keyof typeof GENDER] || `その他`;
 
     const content = `スキルシート:
 ID: ${skillSheet.id}

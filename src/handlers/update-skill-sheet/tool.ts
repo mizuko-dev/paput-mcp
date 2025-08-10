@@ -4,7 +4,8 @@ import { handleUpdateSkillSheet } from './handler.js';
 export const updateSkillSheetTool: ToolHandler = {
   definition: {
     name: 'paput_update_skill_sheet',
-    description: 'PaPut のスキルシートを更新します。指定されたフィールドのみが更新され、指定されていないフィールドは既存の値が保持されます。',
+    description:
+      'PaPut のスキルシートを更新します。指定されたフィールドのみが更新され、指定されていないフィールドは既存の値が保持されます。',
     inputSchema: {
       type: 'object',
       properties: {
@@ -44,7 +45,8 @@ export const updateSkillSheetTool: ToolHandler = {
               },
               category_type: {
                 type: 'number',
-                description: 'カテゴリタイプ（1: 言語, 2: フレームワーク, 3: データベース, 4: インフラ）',
+                description:
+                  'カテゴリタイプ（1: 言語, 2: フレームワーク, 3: データベース, 4: インフラ）',
               },
               level: {
                 type: 'string',
@@ -65,7 +67,10 @@ export const updateSkillSheetTool: ToolHandler = {
             type: 'object',
             properties: {
               id: { type: 'number' },
-              type: { type: 'number', description: 'プロジェクトタイプ（1: 業務, 2: 個人）' },
+              type: {
+                type: 'number',
+                description: 'プロジェクトタイプ（1: 業務, 2: 個人）',
+              },
               title: { type: 'string' },
               start_period: { type: 'string' },
               end_period: { type: ['string', 'null'] },

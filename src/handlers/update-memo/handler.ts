@@ -57,6 +57,31 @@ export async function handleUpdateMemo(
     categories,
   };
 
+  // プロジェクトの処理
+  if (Array.isArray(args.projects)) {
+    params.projects = args.projects.filter(
+      (item): item is { id: number; title?: string } =>
+        typeof item === 'object' &&
+        item !== null &&
+        'id' in item &&
+        typeof item.id === 'number',
+    );
+  } else if (!args.projects && process.env.PAPUT_PROJECT_MATCH) {
+    // 環境変数が設定されている場合、プロジェクトを検索して自動紐付け
+    try {
+      const projects = await apiService.searchProjects(
+        process.env.PAPUT_PROJECT_MATCH,
+      );
+      if (projects.length > 0) {
+        // 最初にマッチしたプロジェクトを使用
+        params.projects = [projects[0]];
+      }
+    } catch (error) {
+      // プロジェクト検索が失敗しても、メモ更新は続行
+      console.error('Failed to search projects:', error);
+    }
+  }
+
   try {
     const result = await apiService.updateMemo(params);
 
@@ -72,11 +97,16 @@ export async function handleUpdateMemo(
       };
     }
 
+    let message = 'メモを更新しました。';
+    if (params.projects && params.projects.length > 0) {
+      message += `\nプロジェクト: ${params.projects[0].title || `ID: ${params.projects[0].id}`}`;
+    }
+
     return {
       content: [
         {
           type: 'text',
-          text: 'メモを更新しました。',
+          text: message,
         },
       ],
     };
