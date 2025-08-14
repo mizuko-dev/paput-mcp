@@ -1,3 +1,5 @@
+import { ApiClient } from '../services/api/client.js';
+
 export interface ToolDefinition {
   name: string;
   description: string;
@@ -12,6 +14,6 @@ export interface ToolHandler {
   definition: ToolDefinition;
   handler: (
     args: Record<string, unknown> | undefined,
-    apiService: any,
+    apiClient: ApiClient,
   ) => Promise<any>;
 }

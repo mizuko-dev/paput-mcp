@@ -1,9 +1,10 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { deleteIdea } from '../../services/api/idea.js';
 import { DeleteIdeaParams } from '../../types/index.js';
 
 export async function handleDeleteIdea(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   if (!args) {
     return {
@@ -35,7 +36,7 @@ export async function handleDeleteIdea(
   };
 
   try {
-    const result = await apiService.deleteIdea(params);
+    const result = await deleteIdea(apiClient, params);
 
     if (!result.success) {
       return {

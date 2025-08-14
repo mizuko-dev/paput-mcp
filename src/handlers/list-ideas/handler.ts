@@ -1,11 +1,12 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { listIdeas } from '../../services/api/idea.js';
 
 export async function handleListIdeas(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   try {
-    const result = await apiService.listIdeas();
+    const result = await listIdeas(apiClient);
 
     if (!result.success) {
       return {

@@ -1,9 +1,10 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { createIdea } from '../../services/api/idea.js';
 import { CreateIdeaParams } from '../../types/index.js';
 
 export async function handleCreateIdea(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   if (!args) {
     return {
@@ -36,7 +37,7 @@ export async function handleCreateIdea(
   };
 
   try {
-    const result = await apiService.createIdea(params);
+    const result = await createIdea(apiClient, params);
 
     if (!result.success) {
       return {

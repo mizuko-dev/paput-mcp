@@ -5,7 +5,7 @@ import {
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { ApiService } from './services/api-service.js';
+import { createApiClient, type ApiClient } from './services/api/index.js';
 import {
   createMemoTool,
   searchMemoTool,
@@ -18,10 +18,20 @@ import {
   updateNoteTool,
   listIdeasTool,
   createIdeaTool,
+  updateIdeaTool,
   deleteIdeaTool,
   getSkillSheetTool,
-  createSkillSheetTool,
-  updateSkillSheetTool,
+  updateSkillSheetBasicInfoTool,
+  updateSkillSheetSelfPrTool,
+  getSkillSheetSkillsTool,
+  updateSkillSheetSkillsTool,
+  addSkillSheetSkillTool,
+  updateSkillSheetSkillTool,
+  deleteSkillSheetSkillTool,
+  getSkillSheetProjectsTool,
+  addSkillSheetProjectTool,
+  updateSkillSheetProjectTool,
+  deleteSkillSheetProjectTool,
 } from './handlers/index.js';
 import { ToolHandler } from './types/index.js';
 
@@ -30,7 +40,7 @@ export function setupTool(
   apiUrl: string,
   apiKey: string,
 ): void {
-  const apiService = new ApiService(apiUrl, apiKey);
+  const apiClient = createApiClient(apiUrl, apiKey);
 
   const tools: ToolHandler[] = [
     createMemoTool,
@@ -44,10 +54,20 @@ export function setupTool(
     updateNoteTool,
     listIdeasTool,
     createIdeaTool,
+    updateIdeaTool,
     deleteIdeaTool,
     getSkillSheetTool,
-    createSkillSheetTool,
-    updateSkillSheetTool,
+    updateSkillSheetBasicInfoTool,
+    updateSkillSheetSelfPrTool,
+    getSkillSheetSkillsTool,
+    updateSkillSheetSkillsTool,
+    addSkillSheetSkillTool,
+    updateSkillSheetSkillTool,
+    deleteSkillSheetSkillTool,
+    getSkillSheetProjectsTool,
+    addSkillSheetProjectTool,
+    updateSkillSheetProjectTool,
+    deleteSkillSheetProjectTool,
   ];
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -69,7 +89,7 @@ export function setupTool(
       };
     }
 
-    return await tool.handler(request.params.arguments, apiService);
+    return await tool.handler(request.params.arguments, apiClient);
   });
 
   // リソース一覧を返すハンドラー

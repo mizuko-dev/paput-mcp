@@ -80,3 +80,20 @@ export interface UpdateSkillSheetResponse {
   success: boolean;
   error?: string;
 }
+
+// Skill types
+export interface SkillSheetSkill {
+  id?: number;
+  category: {
+    id: number;
+    name: string;
+  };
+  category_type: number;
+  level: string;
+  years: number;
+}
+
+// Project types
+export interface GetProjectsResponse {
+  projects: GetSkillSheetProject[];
+}

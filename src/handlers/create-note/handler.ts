@@ -1,9 +1,10 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { createNote } from '../../services/api/note.js';
 import { CreateNoteParams } from '../../types/index.js';
 
 export async function handleCreateNote(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   if (!args) {
     return {
@@ -44,7 +45,7 @@ export async function handleCreateNote(
   }
 
   try {
-    const result = await apiService.createNote(params);
+    const result = await createNote(apiClient, params);
 
     if (!result.success) {
       return {

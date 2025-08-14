@@ -1,9 +1,10 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { getMemo } from '../../services/api/memo.js';
 import { GetMemoParams, GetMemoResponse } from '../../types/index.js';
 
 export async function handleGetMemo(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   if (!args || typeof args.id !== 'number') {
     return {
@@ -22,7 +23,7 @@ export async function handleGetMemo(
   };
 
   try {
-    const result = await apiService.getMemo(params);
+    const result = await getMemo(apiClient, params);
 
     const categories =
       result.categories.length > 0
@@ -31,9 +32,14 @@ export async function handleGetMemo(
     const visibility = result.is_public ? '公開' : '非公開';
     const likeInfo = `いいね: ${result.like_count}${result.has_liked ? ' (いいね済み)' : ''}`;
     const bookmarkInfo = `ブックマーク: ${result.bookmark_count}${result.has_bookmarked ? ' (ブックマーク済み)' : ''}`;
+    const projects =
+      result.projects.length > 0
+        ? `プロジェクト: ${result.projects.map((p) => p.title).join(', ')}`
+        : '';
 
     const memoDetail = `【${result.title}】(${visibility})
 ${categories}
+${projects}
 
 ${result.body}
 

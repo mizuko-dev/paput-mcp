@@ -1,9 +1,10 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { searchMemos } from '../../services/api/memo.js';
 import { SearchMemoParams } from '../../types/index.js';
 
 export async function handleSearchMemo(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   const params: SearchMemoParams = {};
 
@@ -31,7 +32,7 @@ export async function handleSearchMemo(
   }
 
   try {
-    const result = await apiService.searchMemos(params);
+    const result = await searchMemos(apiClient, params);
 
     if (!result.success) {
       return {

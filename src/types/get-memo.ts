@@ -23,4 +23,8 @@ export interface GetMemoResponse {
   has_liked: boolean;
   bookmark_count: number;
   has_bookmarked: boolean;
+  projects: Array<{
+    id: number;
+    title: string;
+  }>;
 }

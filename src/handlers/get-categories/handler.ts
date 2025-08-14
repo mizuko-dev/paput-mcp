@@ -1,11 +1,12 @@
-import { ApiService } from '../../services/index.js';
+import { getCategories } from '../../services/api/category.js';
+import { ApiClient } from '../../services/api/client.js';
 
 export async function handleGetCategories(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   try {
-    const categories = await apiService.getCategories();
+    const categories = await getCategories(apiClient);
 
     if (categories.length === 0) {
       return {

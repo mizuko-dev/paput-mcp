@@ -1,9 +1,11 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { searchSkillSheetProjects } from '../../services/api/skill-sheet.js';
 import { UpdateMemoParams } from '../../types/index.js';
+import { updateMemo } from '../../services/api/memo.js';
 
 export async function handleUpdateMemo(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   if (!args) {
     return {
@@ -69,7 +71,8 @@ export async function handleUpdateMemo(
   } else if (!args.projects && process.env.PAPUT_PROJECT_MATCH) {
     // 環境変数が設定されている場合、プロジェクトを検索して自動紐付け
     try {
-      const projects = await apiService.searchProjects(
+      const projects = await searchSkillSheetProjects(
+        apiClient,
         process.env.PAPUT_PROJECT_MATCH,
       );
       if (projects.length > 0) {
@@ -83,7 +86,7 @@ export async function handleUpdateMemo(
   }
 
   try {
-    const result = await apiService.updateMemo(params);
+    const result = await updateMemo(apiClient, params);
 
     if (!result.success) {
       return {

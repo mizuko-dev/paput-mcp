@@ -1,9 +1,10 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { deleteMemo } from '../../services/api/memo.js';
 import { DeleteMemoParams } from '../../types/index.js';
 
 export async function handleDeleteMemo(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   if (!args || typeof args.id !== 'number') {
     return {
@@ -22,7 +23,7 @@ export async function handleDeleteMemo(
   };
 
   try {
-    const result = await apiService.deleteMemo(params);
+    const result = await deleteMemo(apiClient, params);
 
     if (!result.success) {
       return {

@@ -1,9 +1,10 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { getNote } from '../../services/api/note.js';
 import { GetNoteParams } from '../../types/index.js';
 
 export async function handleGetNote(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   if (!args) {
     return {
@@ -35,7 +36,7 @@ export async function handleGetNote(
   };
 
   try {
-    const note = await apiService.getNote(params);
+    const note = await getNote(apiClient, params);
 
     const visibility = note.is_public ? '公開' : '非公開';
     const memoList = note.memos

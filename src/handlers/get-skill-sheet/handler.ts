@@ -1,12 +1,13 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { getSkillSheet } from '../../services/api/skill-sheet.js';
 import { GENDER, PROJECT_TYPE, CATEGORY_TYPE } from '../../types/index.js';
 
 export async function handleGetSkillSheet(
   _args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   try {
-    const skillSheet = await apiService.getSkillSheet();
+    const skillSheet = await getSkillSheet(apiClient);
 
     // スキル情報のフォーマット
     const skillsText =

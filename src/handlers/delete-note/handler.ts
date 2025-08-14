@@ -1,9 +1,10 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { deleteNote } from '../../services/api/note.js';
 import { DeleteNoteParams } from '../../types/index.js';
 
 export async function handleDeleteNote(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   if (!args) {
     return {
@@ -35,7 +36,7 @@ export async function handleDeleteNote(
   };
 
   try {
-    const result = await apiService.deleteNote(params);
+    const result = await deleteNote(apiClient, params);
 
     if (!result.success) {
       return {

@@ -1,9 +1,10 @@
-import { ApiService } from '../../services/index.js';
+import { ApiClient } from '../../services/api/client.js';
+import { searchNotes } from '../../services/api/note.js';
 import { SearchNotesParams } from '../../types/index.js';
 
 export async function handleSearchNotes(
   args: Record<string, unknown> | undefined,
-  apiService: ApiService,
+  apiClient: ApiClient,
 ) {
   // パラメータの構築
   const params: SearchNotesParams = {};
@@ -24,7 +25,7 @@ export async function handleSearchNotes(
   }
 
   try {
-    const result = await apiService.searchNotes(params);
+    const result = await searchNotes(apiClient, params);
 
     if (!result.success) {
       return {
