@@ -20,6 +20,9 @@ export async function handleSearchMemo(
         (id): id is number => typeof id === 'number',
       );
     }
+    if (typeof args.date === 'string') {
+      params.date = args.date;
+    }
     if (typeof args.is_public === 'boolean') {
       params.is_public = args.is_public;
     }

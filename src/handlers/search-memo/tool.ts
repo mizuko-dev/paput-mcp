@@ -23,6 +23,10 @@ export const searchMemoTool: ToolHandler = {
           },
           description: 'メモIDの配列',
         },
+        date: {
+          type: 'string',
+          description: '日付（YYYY-MM-DD形式）',
+        },
         is_public: {
           type: 'boolean',
           description: '公開/非公開フィルタ',

@@ -2,6 +2,7 @@ export interface SearchMemoParams {
   word?: string;
   category_id?: number;
   ids?: number[];
+  date?: string;
   is_public?: boolean;
   page?: number;
   limit?: number;
