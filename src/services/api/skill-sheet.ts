@@ -220,6 +220,29 @@ export async function updateSkillSheetProject(
   await client.put('/api/v1/mcp/skill-sheet/project', project);
 }
 
+export interface BulkUpsertProjectResult {
+  index: number;
+  id: number | null;
+  title: string;
+  action: 'created' | 'updated' | 'failed';
+  error: string | null;
+}
+
+export interface BulkUpsertProjectsResponse {
+  success: boolean;
+  created_count: number;
+  updated_count: number;
+  failed_count: number;
+  results: BulkUpsertProjectResult[];
+}
+
+export async function bulkUpsertSkillSheetProjects(
+  client: ApiClient,
+  projects: UpsertSkillSheetProjectParams[],
+): Promise<BulkUpsertProjectsResponse> {
+  return client.post('/api/v1/mcp/skill-sheet/projects', { projects });
+}
+
 export async function deleteSkillSheetProject(
   client: ApiClient,
   projectId: number,

@@ -68,7 +68,7 @@ async function findExistingProjectId(
   return exactMatch?.id;
 }
 
-function parseProjectParams(
+export function parseProjectParams(
   params: Record<string, unknown> | undefined,
 ): UpsertSkillSheetProjectParams | undefined {
   if (!params) return undefined;

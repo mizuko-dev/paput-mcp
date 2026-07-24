@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from './client.js';
 import {
+  bulkUpsertSkillSheetProjects,
   deleteSkillSheetProject,
   deleteSkillSheetSkill,
   getSkillSheet,
@@ -162,6 +163,41 @@ describe('skill sheet API service', () => {
         '/api/v1/mcp/skill-sheet/projects/5/episodes',
         { episodes },
       );
+    });
+
+    it('posts the projects array to the bulk upsert endpoint', async () => {
+      const client = createMockClient({
+        post: vi.fn().mockResolvedValue({
+          success: true,
+          created_count: 1,
+          updated_count: 0,
+          failed_count: 0,
+          results: [
+            { index: 0, id: 7, title: 'PaPut', action: 'created', error: null },
+          ],
+        }),
+      });
+      const projects = [
+        {
+          type: 1,
+          title: 'PaPut',
+          start_period: '2026-01',
+          description: 'desc',
+          role: 'dev',
+          scale: 'solo',
+          technologies: [{ name: 'Go' }],
+          processes: [4],
+          memos: [],
+        },
+      ];
+
+      const response = await bulkUpsertSkillSheetProjects(client, projects);
+
+      expect(client.post).toHaveBeenCalledWith(
+        '/api/v1/mcp/skill-sheet/projects',
+        { projects },
+      );
+      expect(response).toMatchObject({ success: true, created_count: 1 });
     });
 
     it('puts the whole faq list as a full replace', async () => {

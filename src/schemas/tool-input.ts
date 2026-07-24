@@ -162,6 +162,12 @@ const knowledgeCandidateSchema = z.object({
   is_public: z.boolean().default(false).optional(),
 });
 
+// 一括ツールの要素検証は handler の per-item 検証に委譲する（正本: create-memos）。
+// トップレベルの Zod は「配列存在＋minItems」だけを見て、混在入力（正常＋不正）が
+// setupTool の実行時検証でツール全体エラーにならないようにする。要素スキーマの詳細は
+// 各 tool.ts の inputSchema が広告用に保持する。
+const bulkItemsSchema = z.array(z.unknown()).min(1);
+
 const createMemoInputSchema = z.object({
   title: z.string().describe('Memo title'),
   body: z.string().describe('Memo body'),
@@ -378,6 +384,9 @@ const toolInputSchemas = {
     skills: z.array(skillSchema).describe('Skill list'),
   }),
   paput_upsert_skill_sheet_project: skillSheetProjectSchema,
+  paput_upsert_skill_sheet_projects: z.object({
+    projects: bulkItemsSchema.describe('Projects to add or update'),
+  }),
   paput_delete_skill_sheet_project: z.object({
     project_id: z.number().describe('Project ID to delete'),
   }),
@@ -567,6 +576,9 @@ const toolInputSchemas = {
       .describe('Source session updated timestamp in ISO 8601 format')
       .optional(),
   }),
+  paput_mark_processed_sessions: z.object({
+    sessions: bulkItemsSchema.describe('Sessions to mark as processed'),
+  }),
   paput_list_pending_candidates: z.object({
     limit: z
       .number()
@@ -627,6 +639,9 @@ const toolInputSchemas = {
       .describe('Projects to link when saving')
       .optional(),
     is_public: z.boolean().default(false).optional(),
+  }),
+  paput_save_pending_candidates: z.object({
+    candidates: bulkItemsSchema.describe('Approved pending candidates to save'),
   }),
   paput_discard_pending_candidate: z.object({
     candidate_id: z.string().describe('Candidate ID to discard'),

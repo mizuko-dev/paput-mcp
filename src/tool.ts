@@ -28,6 +28,7 @@ import {
   updateSkillSheetSelfPrTool,
   setSkillSheetSkillsTool,
   upsertSkillSheetProjectTool,
+  upsertSkillSheetProjectsTool,
   deleteSkillSheetProjectTool,
   getSkillSheetProjectEpisodesContextTool,
   updateSkillSheetProjectEpisodesTool,
@@ -50,9 +51,11 @@ import {
   addKnowledgeCandidatesTool,
   listProcessedSessionsTool,
   markProcessedSessionTool,
+  markProcessedSessionsTool,
   listPendingCandidatesTool,
   updatePendingCandidateTool,
   savePendingCandidateTool,
+  savePendingCandidatesTool,
   discardPendingCandidateTool,
   getCapturePolicyTool,
   getDiscardPolicyContextTool,
@@ -63,9 +66,11 @@ import type { ToolContext, ToolHandler } from './types/index.js';
 const ONBOARDING_STATUS_INVALIDATING_TOOLS = new Set([
   'paput_create_memos',
   'paput_save_pending_candidate',
+  'paput_save_pending_candidates',
   'paput_update_skill_sheet_basic_info',
   'paput_set_skill_sheet_skills',
   'paput_upsert_skill_sheet_project',
+  'paput_upsert_skill_sheet_projects',
 ]);
 
 const ONBOARDING_SKILL_HINT =
@@ -201,24 +206,41 @@ function shouldInvalidateOnboardingStatus(
   if (!ONBOARDING_STATUS_INVALIDATING_TOOLS.has(toolName)) return false;
   if (result.isError !== true) return true;
 
+  // isError のとき（部分失敗など）は書き込みが実際に発生した場合のみ無効化する。
   const structuredContent = result.structuredContent;
+  if (typeof structuredContent !== 'object' || structuredContent === null) {
+    return false;
+  }
+  const content = structuredContent as Record<string, unknown>;
+
   if (toolName === 'paput_save_pending_candidate') {
+    return content.action === 'save_candidate_failed_after_memo_created';
+  }
+  if (toolName === 'paput_save_pending_candidates') {
+    // メモ作成済み（saved_count>0 か retry_args 付き要素）なら status に反映される。
+    if (numberField(content.saved_count) > 0) return true;
     return (
-      typeof structuredContent === 'object' &&
-      structuredContent !== null &&
-      'action' in structuredContent &&
-      structuredContent.action === 'save_candidate_failed_after_memo_created'
+      Array.isArray(content.results) &&
+      content.results.some(
+        (item) =>
+          typeof item === 'object' && item !== null && 'retry_args' in item,
+      )
     );
   }
-  if (toolName !== 'paput_create_memos') return false;
+  if (toolName === 'paput_upsert_skill_sheet_projects') {
+    return (
+      numberField(content.created_count) > 0 ||
+      numberField(content.updated_count) > 0
+    );
+  }
+  if (toolName === 'paput_create_memos') {
+    return numberField(content.created_count) > 0;
+  }
+  return false;
+}
 
-  return (
-    typeof structuredContent === 'object' &&
-    structuredContent !== null &&
-    'created_count' in structuredContent &&
-    typeof structuredContent.created_count === 'number' &&
-    structuredContent.created_count > 0
-  );
+function numberField(value: unknown): number {
+  return typeof value === 'number' ? value : 0;
 }
 
 export async function appendOnboardingNudge(
@@ -283,6 +305,7 @@ export function getRegisteredTools(
     updateSkillSheetSelfPrTool,
     setSkillSheetSkillsTool,
     upsertSkillSheetProjectTool,
+    upsertSkillSheetProjectsTool,
     deleteSkillSheetProjectTool,
     getSkillSheetProjectEpisodesContextTool,
     updateSkillSheetProjectEpisodesTool,
@@ -305,9 +328,11 @@ export function getRegisteredTools(
     addKnowledgeCandidatesTool,
     listProcessedSessionsTool,
     markProcessedSessionTool,
+    markProcessedSessionsTool,
     listPendingCandidatesTool,
     updatePendingCandidateTool,
     savePendingCandidateTool,
+    savePendingCandidatesTool,
     discardPendingCandidateTool,
     getCapturePolicyTool,
     getDiscardPolicyContextTool,
@@ -495,12 +520,14 @@ function isDestructiveTool(name: string): boolean {
   return (
     name.includes('_delete_') ||
     name === 'paput_mark_processed_session' ||
+    name === 'paput_mark_processed_sessions' ||
     name === 'paput_discard_pending_candidate' ||
     name === 'paput_discard_project_proposal' ||
     name === 'paput_promote_project_documents' ||
     name === 'paput_update_capture_policy' ||
     name === 'paput_set_skill_sheet_skills' ||
     name === 'paput_upsert_skill_sheet_project' ||
+    name === 'paput_upsert_skill_sheet_projects' ||
     name.startsWith('paput_update_')
   );
 }
@@ -515,10 +542,12 @@ function isOpenWorldTool(name: string): boolean {
     name === 'paput_update_skill_sheet_self_pr' ||
     name === 'paput_set_skill_sheet_skills' ||
     name === 'paput_upsert_skill_sheet_project' ||
+    name === 'paput_upsert_skill_sheet_projects' ||
     name === 'paput_delete_skill_sheet_project' ||
     name === 'paput_update_skill_sheet_project_episodes' ||
     name === 'paput_update_skill_sheet_faq' ||
-    name === 'paput_save_pending_candidate'
+    name === 'paput_save_pending_candidate' ||
+    name === 'paput_save_pending_candidates'
   );
 }
 

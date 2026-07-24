@@ -138,6 +138,13 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
     },
     ['success', 'action', 'project'],
   ),
+  paput_upsert_skill_sheet_projects: outputSchema({
+    success: booleanSchema,
+    created_count: numberSchema,
+    updated_count: numberSchema,
+    failed_count: numberSchema,
+    results: objectArraySchema,
+  }),
   paput_delete_skill_sheet_project: outputSchema({
     success: booleanSchema,
     action: stringSchema,
@@ -251,6 +258,12 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
     },
     ['session_id', 'source', 'processed_at'],
   ),
+  paput_mark_processed_sessions: outputSchema({
+    success: booleanSchema,
+    marked_count: numberSchema,
+    failed_count: numberSchema,
+    results: objectArraySchema,
+  }),
   paput_list_pending_candidates: outputSchema({
     count: numberSchema,
     candidates: objectArraySchema,
@@ -269,6 +282,12 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
     created_at_source: stringSchema,
     used_existing_memo: booleanSchema,
     warnings: stringArraySchema,
+  }),
+  paput_save_pending_candidates: outputSchema({
+    success: booleanSchema,
+    saved_count: numberSchema,
+    failed_count: numberSchema,
+    results: objectArraySchema,
   }),
   paput_discard_pending_candidate: outputSchema({
     discarded: booleanSchema,

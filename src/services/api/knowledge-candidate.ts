@@ -166,3 +166,70 @@ export async function markRemoteProcessedSession(
 ): Promise<ProcessedSession> {
   return client.post<ProcessedSession>('/api/v1/mcp/processed-sessions', params);
 }
+
+export interface MarkProcessedSessionInput {
+  source: SessionSource;
+  session_id: string;
+  source_session_updated_at?: string;
+}
+
+export interface BulkMarkProcessedSessionResult {
+  index: number;
+  session_id: string;
+  status: 'marked' | 'failed';
+  error: string | null;
+}
+
+export interface BulkMarkProcessedSessionsResponse {
+  success: boolean;
+  marked_count: number;
+  failed_count: number;
+  results: BulkMarkProcessedSessionResult[];
+}
+
+export async function markRemoteProcessedSessions(
+  client: ApiClient,
+  sessions: MarkProcessedSessionInput[],
+): Promise<BulkMarkProcessedSessionsResponse> {
+  return client.post<BulkMarkProcessedSessionsResponse>(
+    '/api/v1/mcp/processed-sessions',
+    { sessions },
+  );
+}
+
+export interface SaveCandidateInput {
+  candidate_id: string;
+  saved_memo_id?: number;
+  title?: string;
+  body?: string;
+  categories?: string[];
+  memo_type_keys?: string[];
+  projects?: Array<{ id: number; title?: string }>;
+  is_public?: boolean;
+  created_at?: string;
+}
+
+export interface BulkSaveCandidateResult {
+  index: number;
+  candidate_id: string;
+  saved_memo_id: number | null;
+  status: 'saved' | 'failed';
+  error: string | null;
+}
+
+export interface BulkSaveCandidatesResponse {
+  success: boolean;
+  saved_count: number;
+  failed_count: number;
+  results: BulkSaveCandidateResult[];
+}
+
+export async function saveRemoteKnowledgeCandidates(
+  client: ApiClient,
+  candidates: SaveCandidateInput[],
+): Promise<BulkSaveCandidatesResponse> {
+  return client.put<BulkSaveCandidatesResponse>(
+    '/api/v1/mcp/knowledge-candidates/save',
+    { candidates },
+  );
+}

@@ -20,6 +20,7 @@ const expectedToolNames = [
   'paput_update_skill_sheet_self_pr',
   'paput_set_skill_sheet_skills',
   'paput_upsert_skill_sheet_project',
+  'paput_upsert_skill_sheet_projects',
   'paput_delete_skill_sheet_project',
   'paput_get_skill_sheet_project_episodes_context',
   'paput_update_skill_sheet_project_episodes',
@@ -42,9 +43,11 @@ const expectedToolNames = [
   'paput_add_knowledge_candidates',
   'paput_list_processed_sessions',
   'paput_mark_processed_session',
+  'paput_mark_processed_sessions',
   'paput_list_pending_candidates',
   'paput_update_pending_candidate',
   'paput_save_pending_candidate',
+  'paput_save_pending_candidates',
   'paput_discard_pending_candidate',
   'paput_get_capture_policy',
   'paput_get_discard_policy_context',
@@ -78,6 +81,7 @@ const destructiveToolNames = [
   'paput_update_skill_sheet_self_pr',
   'paput_set_skill_sheet_skills',
   'paput_upsert_skill_sheet_project',
+  'paput_upsert_skill_sheet_projects',
   'paput_delete_skill_sheet_project',
   'paput_update_skill_sheet_project_episodes',
   'paput_update_skill_sheet_faq',
@@ -89,6 +93,7 @@ const destructiveToolNames = [
   'paput_discard_project_proposal',
   'paput_promote_project_documents',
   'paput_mark_processed_session',
+  'paput_mark_processed_sessions',
   'paput_update_pending_candidate',
   'paput_discard_pending_candidate',
   'paput_update_capture_policy',
@@ -103,10 +108,12 @@ const openWorldToolNames = [
   'paput_update_skill_sheet_self_pr',
   'paput_set_skill_sheet_skills',
   'paput_upsert_skill_sheet_project',
+  'paput_upsert_skill_sheet_projects',
   'paput_delete_skill_sheet_project',
   'paput_update_skill_sheet_project_episodes',
   'paput_update_skill_sheet_faq',
   'paput_save_pending_candidate',
+  'paput_save_pending_candidates',
 ];
 
 describe('registered tools', () => {
@@ -460,6 +467,8 @@ describe('onboarding nudges', () => {
     'paput_update_skill_sheet_basic_info',
     'paput_set_skill_sheet_skills',
     'paput_upsert_skill_sheet_project',
+    'paput_upsert_skill_sheet_projects',
+    'paput_save_pending_candidates',
   ])('invalidates status after a successful %s write', async (toolName) => {
     const onboarding = createOnboardingContext({
       memo_count: 1,
@@ -471,6 +480,120 @@ describe('onboarding nudges', () => {
     expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
     expect(onboarding.getStatus).not.toHaveBeenCalled();
     expect(onboarding.claimNudge).not.toHaveBeenCalled();
+  });
+
+  it('invalidates status after a partial bulk project upsert that created a project', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 1,
+      has_skill_sheet: true,
+    });
+    const partialResult = {
+      structuredContent: {
+        success: false,
+        created_count: 1,
+        updated_count: 0,
+        failed_count: 1,
+        results: [
+          { index: 0, id: 5, title: 'PaPut', action: 'created', error: null },
+          { index: 1, id: null, title: 'x', action: 'failed', error: 'nope' },
+        ],
+      },
+      content: [{ type: 'text', text: 'partial' }],
+      isError: true,
+    };
+
+    await processToolResult('paput_upsert_skill_sheet_projects', partialResult, {
+      onboarding,
+    });
+
+    expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
+    expect(onboarding.getStatus).not.toHaveBeenCalled();
+  });
+
+  it('does not invalidate status when every bulk project upsert failed', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 1,
+      has_skill_sheet: true,
+    });
+    const allFailed = {
+      structuredContent: {
+        success: false,
+        created_count: 0,
+        updated_count: 0,
+        failed_count: 2,
+        results: [
+          { index: 0, id: null, title: 'a', action: 'failed', error: 'e' },
+          { index: 1, id: null, title: 'b', action: 'failed', error: 'e' },
+        ],
+      },
+      content: [{ type: 'text', text: 'all failed' }],
+      isError: true,
+    };
+
+    await processToolResult('paput_upsert_skill_sheet_projects', allFailed, {
+      onboarding,
+    });
+
+    expect(onboarding.invalidateStatus).not.toHaveBeenCalled();
+  });
+
+  it('invalidates status when a bulk candidate save created a memo but the save failed', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 1,
+      has_skill_sheet: true,
+    });
+    const partialResult = {
+      structuredContent: {
+        success: false,
+        saved_count: 0,
+        failed_count: 1,
+        results: [
+          {
+            index: 0,
+            candidate_id: 'c1',
+            saved_memo_id: 100,
+            status: 'failed',
+            error: 'db conflict',
+            retry_args: { candidate_id: 'c1', saved_memo_id: 100 },
+          },
+        ],
+      },
+      content: [{ type: 'text', text: 'partial' }],
+      isError: true,
+    };
+
+    await processToolResult('paput_save_pending_candidates', partialResult, {
+      onboarding,
+    });
+
+    expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
+    expect(onboarding.getStatus).not.toHaveBeenCalled();
+  });
+
+  it('does not invalidate status when a bulk candidate save wrote nothing', async () => {
+    const onboarding = createOnboardingContext({
+      memo_count: 1,
+      has_skill_sheet: true,
+    });
+    const allFailed = {
+      structuredContent: {
+        success: false,
+        saved_count: 0,
+        failed_count: 2,
+        results: [
+          { index: 0, candidate_id: '', saved_memo_id: null, status: 'failed', error: 'candidate_id is required' },
+          { index: 1, candidate_id: 'c2', saved_memo_id: null, status: 'failed', error: 'Candidate not found among pending candidates' },
+        ],
+      },
+      content: [{ type: 'text', text: 'all failed' }],
+      isError: true,
+    };
+
+    await processToolResult('paput_save_pending_candidates', allFailed, {
+      onboarding,
+    });
+
+    expect(onboarding.invalidateStatus).not.toHaveBeenCalled();
   });
 
   it('fetches fresh status on the next regular tool call after a write', async () => {
