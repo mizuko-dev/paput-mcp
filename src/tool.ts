@@ -16,7 +16,6 @@ import { getToolOutputSchema } from './schemas/tool-output.js';
 import {
   createMemosTool,
   searchMemoTool,
-  getMemoTool,
   updateMemoTool,
   getCategoriesTool,
   createNoteTool,
@@ -27,17 +26,13 @@ import {
   updateSkillSheetBasicInfoTool,
   updateSkillSheetSelfPrTool,
   setSkillSheetSkillsTool,
-  upsertSkillSheetProjectTool,
   upsertSkillSheetProjectsTool,
   deleteSkillSheetProjectTool,
   getSkillSheetProjectEpisodesContextTool,
   updateSkillSheetProjectEpisodesTool,
   updateSkillSheetFaqTool,
   listGoalsTool,
-  createGoalTool,
-  updateGoalTool,
-  deleteGoalTool,
-  getDashboardAnalysisTool,
+  setGoalsTool,
   updateDashboardAnalysisTool,
   getDashboardAnalysisContextTool,
   getProjectContextTool,
@@ -50,13 +45,11 @@ import {
   promoteProjectDocumentsTool,
   addKnowledgeCandidatesTool,
   listProcessedSessionsTool,
-  markProcessedSessionTool,
   markProcessedSessionsTool,
   listPendingCandidatesTool,
-  updatePendingCandidateTool,
-  savePendingCandidateTool,
+  updatePendingCandidatesTool,
   savePendingCandidatesTool,
-  discardPendingCandidateTool,
+  discardPendingCandidatesTool,
   getCapturePolicyTool,
   getDiscardPolicyContextTool,
   updateCapturePolicyTool,
@@ -65,11 +58,9 @@ import type { ToolContext, ToolHandler } from './types/index.js';
 
 const ONBOARDING_STATUS_INVALIDATING_TOOLS = new Set([
   'paput_create_memos',
-  'paput_save_pending_candidate',
   'paput_save_pending_candidates',
   'paput_update_skill_sheet_basic_info',
   'paput_set_skill_sheet_skills',
-  'paput_upsert_skill_sheet_project',
   'paput_upsert_skill_sheet_projects',
 ]);
 
@@ -213,9 +204,6 @@ function shouldInvalidateOnboardingStatus(
   }
   const content = structuredContent as Record<string, unknown>;
 
-  if (toolName === 'paput_save_pending_candidate') {
-    return content.action === 'save_candidate_failed_after_memo_created';
-  }
   if (toolName === 'paput_save_pending_candidates') {
     // メモ作成済み（saved_count>0 か retry_args 付き要素）なら status に反映される。
     if (numberField(content.saved_count) > 0) return true;
@@ -293,7 +281,6 @@ export function getRegisteredTools(
   const tools = [
     createMemosTool,
     searchMemoTool,
-    getMemoTool,
     updateMemoTool,
     getCategoriesTool,
     createNoteTool,
@@ -304,17 +291,13 @@ export function getRegisteredTools(
     updateSkillSheetBasicInfoTool,
     updateSkillSheetSelfPrTool,
     setSkillSheetSkillsTool,
-    upsertSkillSheetProjectTool,
     upsertSkillSheetProjectsTool,
     deleteSkillSheetProjectTool,
     getSkillSheetProjectEpisodesContextTool,
     updateSkillSheetProjectEpisodesTool,
     updateSkillSheetFaqTool,
     listGoalsTool,
-    createGoalTool,
-    updateGoalTool,
-    deleteGoalTool,
-    getDashboardAnalysisTool,
+    setGoalsTool,
     updateDashboardAnalysisTool,
     getDashboardAnalysisContextTool,
     getProjectContextTool,
@@ -327,13 +310,11 @@ export function getRegisteredTools(
     promoteProjectDocumentsTool,
     addKnowledgeCandidatesTool,
     listProcessedSessionsTool,
-    markProcessedSessionTool,
     markProcessedSessionsTool,
     listPendingCandidatesTool,
-    updatePendingCandidateTool,
-    savePendingCandidateTool,
+    updatePendingCandidatesTool,
     savePendingCandidatesTool,
-    discardPendingCandidateTool,
+    discardPendingCandidatesTool,
     getCapturePolicyTool,
     getDiscardPolicyContextTool,
     updateCapturePolicyTool,
@@ -519,14 +500,13 @@ function isReadOnlyTool(name: string): boolean {
 function isDestructiveTool(name: string): boolean {
   return (
     name.includes('_delete_') ||
-    name === 'paput_mark_processed_session' ||
+    name === 'paput_set_goals' ||
     name === 'paput_mark_processed_sessions' ||
-    name === 'paput_discard_pending_candidate' ||
+    name === 'paput_discard_pending_candidates' ||
     name === 'paput_discard_project_proposal' ||
     name === 'paput_promote_project_documents' ||
     name === 'paput_update_capture_policy' ||
     name === 'paput_set_skill_sheet_skills' ||
-    name === 'paput_upsert_skill_sheet_project' ||
     name === 'paput_upsert_skill_sheet_projects' ||
     name.startsWith('paput_update_')
   );
@@ -541,12 +521,10 @@ function isOpenWorldTool(name: string): boolean {
     name === 'paput_update_skill_sheet_basic_info' ||
     name === 'paput_update_skill_sheet_self_pr' ||
     name === 'paput_set_skill_sheet_skills' ||
-    name === 'paput_upsert_skill_sheet_project' ||
     name === 'paput_upsert_skill_sheet_projects' ||
     name === 'paput_delete_skill_sheet_project' ||
     name === 'paput_update_skill_sheet_project_episodes' ||
     name === 'paput_update_skill_sheet_faq' ||
-    name === 'paput_save_pending_candidate' ||
     name === 'paput_save_pending_candidates'
   );
 }

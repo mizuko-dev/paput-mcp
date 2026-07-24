@@ -49,8 +49,8 @@ Each episode has:
 Always propose an `achievements` draft alongside the episodes draft: 3-5 factual bullets (max 100 characters each, max 10 total) describing what was built and is running, grounded in the project description and public linked memos.
 
 - Achievements are user-owned source material, not generated evidence. Present them as a draft for the user to edit and approve, and keep them factual: no judgment narrative (that belongs to episodes) and no invented metrics.
-- Use `paput_upsert_skill_sheet_project` to save achievements only after explicit approval. Saving episodes and saving achievements are separate tool calls; the user may approve one and not the other.
-- Omit `achievements` when calling `paput_upsert_skill_sheet_project` if the user wants to keep existing bullets. Pass `achievements: []` only when the user explicitly wants to clear them.
+- Use `paput_upsert_skill_sheet_projects` (pass the single project as a one-element `projects` array) to save achievements only after explicit approval. Saving episodes and saving achievements are separate tool calls; the user may approve one and not the other.
+- Omit `achievements` when calling `paput_upsert_skill_sheet_projects` if the user wants to keep existing bullets. Pass `achievements: []` only when the user explicitly wants to clear them.
 
 ## Rules
 

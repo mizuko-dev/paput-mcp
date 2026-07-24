@@ -60,8 +60,9 @@ current state first and skip work that is already complete.
 6. Save the approved memo candidates by invoking the `paput-save` skill and
    following its explicit-approval rules. Save the separately approved
    skill-sheet foundation with `paput_update_skill_sheet_basic_info`,
-   `paput_set_skill_sheet_skills`, and `paput_upsert_skill_sheet_project` as
-   needed. Preserve existing data that the manifest did not propose changing.
+   `paput_set_skill_sheet_skills`, and `paput_upsert_skill_sheet_projects`
+   (pass the projects as one `projects` array) as needed. Preserve existing
+   data that the manifest did not propose changing.
    Fetch `paput_get_skill_sheet` afterward to verify the saved foundation.
 7. Propose installing the PaPut continuous-capture rules with:
 
@@ -77,9 +78,9 @@ current state first and skip work that is already complete.
 
 8. Resolve the public profile URL before presenting it:
    - When an owned memo ID is available from the quick harvest, the save result,
-     or the current-state lookup, call `paput_get_memo` with that ID and read the
-     PaPut user ID from `structuredContent.memo.user.user_id`. Construct the
-     profile URL as `https://paput.io/account/<user_id>`.
+     or the current-state lookup, call `paput_search_memo` with `ids: [<id>]` and
+     read the PaPut user ID from `structuredContent.memos[0].user.user_id`.
+     Construct the profile URL as `https://paput.io/account/<user_id>`.
    - When there is no memo to query, or the user ID is unavailable, ask the user
      for their PaPut user ID or the public account URL shown in PaPut. Construct
      the same `/account/<user_id>` URL when they provide an ID. Do not infer an

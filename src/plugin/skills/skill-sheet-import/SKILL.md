@@ -78,7 +78,8 @@ source, state why, and proceed with the rest.
    the manifest shown. Do not save an item that was not shown and approved.
 9. Save the approved values: `paput_update_skill_sheet_basic_info` for
    approved fields, `paput_set_skill_sheet_skills` for the skill list, and
-   `paput_upsert_skill_sheet_project` per project.
+   `paput_upsert_skill_sheet_projects` for the projects (pass them all in one
+   `projects` array rather than calling per project).
    `paput_set_skill_sheet_skills` REPLACES the full list — always pass the
    merged result of the existing skills and the approved additions, never the
    additions alone. Fetch `paput_get_skill_sheet` afterward to verify the

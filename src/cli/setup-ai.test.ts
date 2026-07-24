@@ -322,8 +322,10 @@ describe('findSkill', () => {
     expect(onboarding?.body).toContain('Gate 2 — one batch review');
     expect(onboarding?.body).toContain('paput-save');
     expect(onboarding?.body).toContain('setup-ai --rules-only');
-    expect(onboarding?.body).toContain('paput_get_memo');
-    expect(onboarding?.body).toContain('structuredContent.memo.user.user_id');
+    expect(onboarding?.body).toContain('paput_search_memo');
+    expect(onboarding?.body).toContain(
+      'structuredContent.memos[0].user.user_id',
+    );
     expect(onboarding?.body).toContain('https://paput.io/account/<user_id>');
     expect(normalizedBody).toContain(
       'ask the user for their PaPut user ID or the public account URL',

@@ -70,57 +70,6 @@ export async function listRemoteKnowledgeCandidates(
   );
 }
 
-export async function getRemoteKnowledgeCandidate(
-  client: ApiClient,
-  candidateId: string,
-): Promise<PendingKnowledgeCandidate> {
-  return client.get<PendingKnowledgeCandidate>(
-    `/api/v1/mcp/knowledge-candidate/${encodeURIComponent(candidateId)}`,
-  );
-}
-
-export async function updateRemoteKnowledgeCandidate(
-  client: ApiClient,
-  params: Record<string, unknown>,
-): Promise<{ updated: boolean; candidate: PendingKnowledgeCandidate }> {
-  return client.put<{ updated: boolean; candidate: PendingKnowledgeCandidate }>(
-    '/api/v1/mcp/knowledge-candidate',
-    params,
-  );
-}
-
-export async function saveRemoteKnowledgeCandidate(
-  client: ApiClient,
-  params: Record<string, unknown>,
-): Promise<{
-  success: boolean;
-  action: 'saved';
-  candidate_id: string;
-  memo_id: number | null;
-  title: string;
-  candidate: PendingKnowledgeCandidate;
-}> {
-  return client.put(
-    '/api/v1/mcp/knowledge-candidate/save',
-    params,
-  );
-}
-
-export async function discardRemoteKnowledgeCandidate(
-  client: ApiClient,
-  params: { candidate_id: string; reason?: string },
-): Promise<{
-  discarded: boolean;
-  candidate_id: string;
-  title: string;
-  candidate: PendingKnowledgeCandidate;
-}> {
-  return client.put(
-    '/api/v1/mcp/knowledge-candidate/discard',
-    params,
-  );
-}
-
 export async function getRemoteCapturePolicy(
   client: ApiClient,
 ): Promise<CapturePolicy> {
@@ -154,17 +103,6 @@ export async function listRemoteProcessedSessions(
   return client.get<ProcessedSessionsRemoteResponse>(
     `/api/v1/mcp/processed-sessions${suffix}`,
   );
-}
-
-export async function markRemoteProcessedSession(
-  client: ApiClient,
-  params: {
-    source: SessionSource;
-    session_id: string;
-    source_session_updated_at?: string;
-  },
-): Promise<ProcessedSession> {
-  return client.post<ProcessedSession>('/api/v1/mcp/processed-sessions', params);
 }
 
 export interface MarkProcessedSessionInput {
@@ -230,6 +168,70 @@ export async function saveRemoteKnowledgeCandidates(
 ): Promise<BulkSaveCandidatesResponse> {
   return client.put<BulkSaveCandidatesResponse>(
     '/api/v1/mcp/knowledge-candidates/save',
+    { candidates },
+  );
+}
+
+export interface UpdateCandidateInput {
+  candidate_id: string;
+  title?: string;
+  body?: string;
+  categories?: string[];
+  memo_type_keys?: string[];
+  projects?: Array<{ id: number; title?: string }>;
+  confidence?: number;
+  is_public?: boolean;
+}
+
+export interface BulkUpdateCandidateResult {
+  index: number;
+  candidate_id: string;
+  status: 'updated' | 'failed';
+  error: string | null;
+}
+
+export interface BulkUpdateCandidatesResponse {
+  success: boolean;
+  updated_count: number;
+  failed_count: number;
+  results: BulkUpdateCandidateResult[];
+}
+
+export async function updateRemoteKnowledgeCandidates(
+  client: ApiClient,
+  candidates: UpdateCandidateInput[],
+): Promise<BulkUpdateCandidatesResponse> {
+  return client.put<BulkUpdateCandidatesResponse>(
+    '/api/v1/mcp/knowledge-candidates',
+    { candidates },
+  );
+}
+
+export interface DiscardCandidateInput {
+  candidate_id: string;
+  reason?: string;
+}
+
+export interface BulkDiscardCandidateResult {
+  index: number;
+  candidate_id: string;
+  status: 'discarded' | 'failed';
+  error: string | null;
+}
+
+export interface BulkDiscardCandidatesResponse {
+  success: boolean;
+  discarded_count: number;
+  failed_count: number;
+  results: BulkDiscardCandidateResult[];
+}
+
+export async function discardRemoteKnowledgeCandidates(
+  client: ApiClient,
+  candidates: DiscardCandidateInput[],
+): Promise<BulkDiscardCandidatesResponse> {
+  return client.put<BulkDiscardCandidatesResponse>(
+    '/api/v1/mcp/knowledge-candidates/discard',
     { candidates },
   );
 }

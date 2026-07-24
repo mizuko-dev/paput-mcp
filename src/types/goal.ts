@@ -19,7 +19,8 @@ export interface Goal {
   updated_at: string;
 }
 
-export interface CreateGoalParams {
+export interface SetGoalInput {
+  id?: number;
   title: string;
   description?: string | null;
   category: GoalCategory;
@@ -28,6 +29,19 @@ export interface CreateGoalParams {
   target_date?: string | null;
 }
 
-export interface UpdateGoalParams extends CreateGoalParams {
-  id: number;
+export interface SetGoalResult {
+  index: number;
+  id: number | null;
+  action: 'created' | 'updated' | 'failed';
+  error: string | null;
+}
+
+export interface SetGoalsResponse {
+  success: boolean;
+  created_count: number;
+  updated_count: number;
+  deleted_count: number;
+  failed_count: number;
+  results: SetGoalResult[];
+  deleted_ids: number[];
 }

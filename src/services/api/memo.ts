@@ -5,8 +5,6 @@ import {
   SearchMemoParams,
   SearchMemoResponse,
   SearchMode,
-  GetMemoParams,
-  GetMemoResponse,
   UpdateMemoParams,
   UpdateMemoResponse,
   Memo,
@@ -109,13 +107,6 @@ export async function searchMemos(
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
-}
-
-export async function getMemo(
-  client: ApiClient,
-  params: GetMemoParams,
-): Promise<GetMemoResponse> {
-  return client.get<GetMemoResponse>(`/api/v1/mcp/memo/${params.id}`);
 }
 
 export async function updateMemo(

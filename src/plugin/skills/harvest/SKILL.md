@@ -82,8 +82,9 @@ periodic catch-up. There is no separate "init" step.
    a project, register with `projects` empty and say so in the report; never
    guess a project from the candidate's topic.
 9. If the session was reviewed but no candidates should be added, call
-   `paput_mark_processed_session` with `source`, `session_id`, and
-   `source_session_updated_at`.
+   `paput_mark_processed_sessions` with a `sessions` array of `{source,
+   session_id, source_session_updated_at}` items. Batch all such sessions from
+   the run into one call rather than marking them one at a time.
 10. Briefly report added candidates, duplicates, rejected candidates,
     persistent-instruction-file additions proposed, and sessions marked as
     processed.
@@ -316,7 +317,8 @@ should not gate:
   bodies — that doubles generation cost.
 - After the coordinator's cross-check, each reader registers its approved
   candidates with `paput_add_knowledge_candidates`, and marks with
-  `paput_mark_processed_session` every reviewed session that ends up with no
+  `paput_mark_processed_sessions` (batch all of its no-registration sessions
+  into one `sessions` array) every reviewed session that ends up with no
   registration — both sessions that produced no candidates and sessions whose
   candidates were all rejected or absorbed in the cross-check. The coordinator
   distributes the real session identity (the Step 3 fields `source`,
@@ -575,7 +577,7 @@ or service behavior stays `knowledge` even when written as guidance.
 - Do not save directly to PaPut.
 - Add candidates to the API-backed pending queue first.
 - `paput_add_knowledge_candidates` marks the source session as processed when candidates are submitted.
-- Use `paput_mark_processed_session` after reviewing a session that produces no candidates — or, on a large backlog, for buckets the user explicitly directed to be marked processed without reading (see Large-Backlog Funnel).
+- Use `paput_mark_processed_sessions` after reviewing sessions that produce no candidates — or, on a large backlog, for buckets the user explicitly directed to be marked processed without reading (see Large-Backlog Funnel). Pass all such sessions in one `sessions` array rather than calling per session.
 - Report duplicates or similar memos when found.
 - Prefer high-quality pending candidates over increasing the pending count.
 - Every candidate carries its source project in `projects` (Step 8); a

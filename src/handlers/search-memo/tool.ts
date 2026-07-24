@@ -5,7 +5,7 @@ export const searchMemoTool: ToolHandler = {
   definition: {
     name: 'paput_search_memo',
     description:
-      'Hybrid search for PaPut memos: finds memos by meaning even when the wording differs, in addition to exact keyword, category, memo type, IDs, date, visibility, and pagination filters. Use this to find existing knowledge before creating or saving a memo, to check for near-duplicate memos beforehand, or to gather typed public memos (decision/operation/principle) for judgment summaries. When query is set, results are ranked by combined relevance and page is ignored; omit query to page through a plain filtered list ordered by most recently updated.',
+      'Hybrid search for PaPut memos: finds memos by meaning even when the wording differs, in addition to exact keyword, category, memo type, IDs, date, visibility, and pagination filters. Each result includes the full body, author, and linked projects, so to fetch a single memo by ID pass ids:[id] (this is the successor to the removed get_memo tool). Use this to find existing knowledge before creating or saving a memo, to check for near-duplicate memos beforehand, or to gather typed public memos (decision/operation/principle) for judgment summaries. When query is set, results are ranked by combined relevance and page is ignored; omit query to page through a plain filtered list ordered by most recently updated.',
     inputSchema: {
       type: 'object',
       properties: {

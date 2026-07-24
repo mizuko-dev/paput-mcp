@@ -13,7 +13,7 @@ Draft the `self_pr` section of the PaPut skill sheet. This skill is draft-first:
 2. Review the basic profile, skills, projects, project `episodes`, project `achievements`, and current `self_pr`.
 3. Gather additional public memo evidence only when needed:
    - Use `paput_search_memo` with `is_public: true` and `memo_type: decision`, `operation`, or `principle`.
-   - Fetch full bodies with `paput_get_memo` only for the memos you actually need.
+   - Fetch full bodies with `paput_search_memo` (pass the IDs in `ids`) only for the memos you actually need.
 4. Draft a first-person self PR in the user's language.
 5. Present the draft and ask the user to edit or approve it.
 6. Do not save unless the user explicitly asks to save, update, or apply it.

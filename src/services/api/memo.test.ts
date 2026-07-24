@@ -1,12 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from './client.js';
-import {
-  createMemo,
-  createMemos,
-  getMemo,
-  searchMemos,
-  updateMemo,
-} from './memo.js';
+import { createMemo, createMemos, searchMemos, updateMemo } from './memo.js';
 
 function createMockClient(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -151,15 +145,7 @@ describe('memo API service', () => {
     });
   });
 
-  describe('getMemo / updateMemo', () => {
-    it('uses the memo id in the GET endpoint', async () => {
-      const client = createMockClient();
-
-      await getMemo(client, { id: 42 });
-
-      expect(client.get).toHaveBeenCalledWith('/api/v1/mcp/memo/42');
-    });
-
+  describe('updateMemo', () => {
     it('puts the update payload and reports success', async () => {
       const client = createMockClient();
 

@@ -84,7 +84,7 @@ Episode requirements:
 Achievements draft (always include):
 - Alongside the episodes, always draft an updated "achievements" list: 3-5 factual bullets (max 100 characters each, max 10 total) describing what was built and is running, grounded in the project description and public linked memos.
 - Achievements are user-owned source material, not generated evidence. Keep them factual: no judgment narrative (that belongs to episodes) and no invented metrics.
-- Present the achievements draft for the user to edit and approve. Save only after explicit approval via paput_upsert_skill_sheet_project. Omit the achievements field to keep existing bullets; pass an empty array only when the user wants to clear them.
+- Present the achievements draft for the user to edit and approve. Save only after explicit approval via paput_upsert_skill_sheet_projects (pass the single project as a one-element array). Omit the achievements field to keep existing bullets; pass an empty array only when the user wants to clear them.
 
 Present both drafts (episodes and achievements) to the user first. Save episodes only after the user explicitly approves them by calling paput_update_skill_sheet_project_episodes with project_id and the approved episodes. Report any dropped_ids from the save response.`;
 

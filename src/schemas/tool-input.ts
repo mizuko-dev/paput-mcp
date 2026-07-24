@@ -33,58 +33,6 @@ const skillSchema = z.object({
   years: z.number().describe('Years of experience'),
 });
 
-const technologySchema = z.object({
-  id: z
-    .number()
-    .describe('Technology ID for an existing technology')
-    .optional(),
-  name: z.string().describe('Technology name'),
-});
-
-const skillSheetMemoSchema = z.object({
-  id: z.number().describe('Memo ID'),
-  title: z.string().describe('Memo title'),
-});
-
-const skillSheetProjectSchema = z.object({
-  id: z
-    .number()
-    .describe('Project ID to update. Omit when creating a new project.')
-    .optional(),
-  type: z
-    .number()
-    .describe(
-      'Project type: 1 business, 2 personal, 3 private (hidden from public profile)',
-    ),
-  title: z.string().describe('Project title'),
-  mcp_alias: z
-    .string()
-    .regex(/^[a-z0-9]{3,40}$/)
-    .describe('Project alias used in remote MCP URLs, e.g. paput')
-    .optional(),
-  start_period: z.string().describe('Start period in YYYY-MM format'),
-  end_period: z.string().describe('End period in YYYY-MM format').optional(),
-  description: z.string().describe('Project description'),
-  role: z.string().describe('Role'),
-  scale: z.string().describe('Team or project scale'),
-  technologies: z.array(technologySchema).describe('Technologies used'),
-  processes: z
-    .array(z.number())
-    .describe(
-      'Development process IDs: 1 requirements, 2 basic design, 3 detailed design, 4 implementation, 5 testing, 6 maintenance',
-    ),
-  memos: z.array(skillSheetMemoSchema).describe('Related memos'),
-  achievements: z
-    .array(
-      z.string().max(100).describe('Achievement bullet, max 100 characters'),
-    )
-    .max(10)
-    .describe(
-      'Achievement bullets owned by the user. Omit to keep existing values; pass an empty array to clear them.',
-    )
-    .optional(),
-});
-
 const skillSheetProjectEpisodeSchema = z.object({
   claim: z
     .string()
@@ -194,33 +142,6 @@ const createMemoInputSchema = z.object({
     .optional(),
 });
 
-const goalCategorySchema = z
-  .enum(['career', 'learning', 'portfolio', 'project', 'other'])
-  .describe('Goal category');
-
-const goalStatusSchema = z
-  .enum(['active', 'archived'])
-  .describe(
-    'Goal status. Active goals are current targets; archived goals are history.',
-  );
-
-const goalInputSchema = z.object({
-  title: z.string().describe('Goal title'),
-  description: z.string().describe('Goal description').nullable().optional(),
-  category: goalCategorySchema,
-  status: goalStatusSchema,
-  priority: z
-    .number()
-    .min(1)
-    .describe('Goal priority. Lower numbers are higher priority.'),
-  target_date: z
-    .string()
-    .date()
-    .describe('Target date in YYYY-MM-DD format')
-    .nullable()
-    .optional(),
-});
-
 const dashboardAnalysisItemSchema = z.object({
   title: z.string().describe('Item title'),
   description: z.string().describe('Item description'),
@@ -296,9 +217,6 @@ const toolInputSchemas = {
         'Include archived (settled/superseded) documents in the results. Defaults to false.',
       )
       .optional(),
-  }),
-  paput_get_memo: z.object({
-    id: z.number().describe('Memo ID'),
   }),
   paput_update_memo: z.object({
     id: z.number().describe('Memo ID'),
@@ -383,7 +301,6 @@ const toolInputSchemas = {
   paput_set_skill_sheet_skills: z.object({
     skills: z.array(skillSchema).describe('Skill list'),
   }),
-  paput_upsert_skill_sheet_project: skillSheetProjectSchema,
   paput_upsert_skill_sheet_projects: z.object({
     projects: bulkItemsSchema.describe('Projects to add or update'),
   }),
@@ -411,14 +328,11 @@ const toolInputSchemas = {
       ),
   }),
   paput_list_goals: emptySchema,
-  paput_create_goal: goalInputSchema,
-  paput_update_goal: goalInputSchema.extend({
-    id: z.number().describe('Goal ID. Required in the update request body.'),
+  paput_set_goals: z.object({
+    goals: bulkItemsSchema.describe(
+      'The complete desired list of goals. Existing goals not included here are deleted.',
+    ),
   }),
-  paput_delete_goal: z.object({
-    id: z.number().describe('Goal ID'),
-  }),
-  paput_get_dashboard_analysis: emptySchema,
   paput_update_dashboard_analysis: z.object({
     current_summary: z.string().describe('Current summary'),
     strengths: z
@@ -568,14 +482,6 @@ const toolInputSchemas = {
       .describe('Optional session source to filter by')
       .optional(),
   }),
-  paput_mark_processed_session: z.object({
-    source: z.enum(['claude', 'codex']).describe('Session source'),
-    session_id: z.string().describe('Session ID that was reviewed'),
-    source_session_updated_at: z
-      .string()
-      .describe('Source session updated timestamp in ISO 8601 format')
-      .optional(),
-  }),
   paput_mark_processed_sessions: z.object({
     sessions: bulkItemsSchema.describe('Sessions to mark as processed'),
   }),
@@ -585,67 +491,14 @@ const toolInputSchemas = {
       .describe('Number of items to return. Defaults to 20.')
       .optional(),
   }),
-  paput_update_pending_candidate: z.object({
-    candidate_id: z.string().describe('Pending candidate ID to update'),
-    title: z.string().min(1).describe('Replacement title').optional(),
-    body: z.string().min(1).describe('Replacement body').optional(),
-    categories: z
-      .array(z.string())
-      .describe('Replacement category names')
-      .optional(),
-    memo_type_keys: z
-      .array(z.enum(['knowledge', 'decision', 'operation', 'principle']))
-      .describe(
-        'Array of memo type classification keys (each one of: knowledge, decision, operation, principle). A memo can have multiple keys at once. decision/operation/principle are the primary material for durable judgment and working-practice summaries.',
-      )
-      .optional(),
-    confidence: z
-      .number()
-      .min(0)
-      .max(1)
-      .describe(
-        'Confidence score from 0 (low) to 1 (high) that this candidate is reusable and worth saving.',
-      )
-      .optional(),
-    is_public: z
-      .boolean()
-      .describe('Whether the saved memo will be public')
-      .optional(),
-    projects: z
-      .array(projectReferenceSchema)
-      .describe('Replacement linked projects')
-      .optional(),
-  }),
-  paput_save_pending_candidate: z.object({
-    candidate_id: z.string().describe('Candidate ID to save'),
-    saved_memo_id: z
-      .number()
-      .describe(
-        'Existing memo ID to attach when retrying after memo creation succeeded but candidate save failed. Omit for normal saves.',
-      )
-      .optional(),
-    title: z.string().describe('Title override when saving').optional(),
-    body: z.string().describe('Body override when saving').optional(),
-    created_at: z
-      .string()
-      .datetime({ offset: true })
-      .describe(
-        'Creation timestamp to use for the PaPut memo, in ISO 8601 date-time format. Defaults to the source session updated timestamp, then the pending candidate created timestamp.',
-      )
-      .optional(),
-    categories: z.array(z.string()).optional(),
-    projects: z
-      .array(projectReferenceSchema)
-      .describe('Projects to link when saving')
-      .optional(),
-    is_public: z.boolean().default(false).optional(),
+  paput_update_pending_candidates: z.object({
+    candidates: bulkItemsSchema.describe('Pending candidates to update'),
   }),
   paput_save_pending_candidates: z.object({
     candidates: bulkItemsSchema.describe('Approved pending candidates to save'),
   }),
-  paput_discard_pending_candidate: z.object({
-    candidate_id: z.string().describe('Candidate ID to discard'),
-    reason: z.string().describe('Reason for discarding').optional(),
+  paput_discard_pending_candidates: z.object({
+    candidates: bulkItemsSchema.describe('Pending candidates to discard'),
   }),
   paput_get_capture_policy: emptySchema,
   paput_get_discard_policy_context: z.object({

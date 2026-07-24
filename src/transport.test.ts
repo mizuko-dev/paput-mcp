@@ -39,7 +39,7 @@ describe('MCP transports', () => {
     expect(result.tools.map((tool) => tool.name)).toContain(
       'paput_create_memos',
     );
-    expect(result.tools).toHaveLength(46);
+    expect(result.tools).toHaveLength(39);
     expect(
       result.tools.every((tool) => tool.outputSchema?.type === 'object'),
     ).toBe(true);
@@ -80,7 +80,7 @@ describe('MCP transports', () => {
         'paput_create_memos',
       );
       expect(result.tools.map((tool) => tool.name)).toContain(
-        'paput_mark_processed_session',
+        'paput_mark_processed_sessions',
       );
     } finally {
       await new Promise<void>((resolve, reject) => {

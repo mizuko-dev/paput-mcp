@@ -9,9 +9,6 @@ const stringSchema = { type: 'string' } as const;
 const nullableStringSchema = {
   anyOf: [stringSchema, { type: 'null' }],
 } as const;
-const nullableNumberSchema = {
-  anyOf: [numberSchema, { type: 'null' }],
-} as const;
 const objectSchema = {
   type: 'object',
   additionalProperties: true,
@@ -83,9 +80,6 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
     memos: objectArraySchema,
     search_mode: searchModeSchema,
   }),
-  paput_get_memo: outputSchema({
-    memo: objectSchema,
-  }),
   paput_update_memo: outputSchema({
     success: booleanSchema,
     action: stringSchema,
@@ -129,15 +123,6 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
     action: stringSchema,
     skills: objectArraySchema,
   }),
-  paput_upsert_skill_sheet_project: outputSchema(
-    {
-      success: booleanSchema,
-      action: stringSchema,
-      id: numberSchema,
-      project: objectSchema,
-    },
-    ['success', 'action', 'project'],
-  ),
   paput_upsert_skill_sheet_projects: outputSchema({
     success: booleanSchema,
     created_count: numberSchema,
@@ -171,20 +156,14 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
   paput_list_goals: outputSchema({
     goals: objectArraySchema,
   }),
-  paput_create_goal: outputSchema({
+  paput_set_goals: outputSchema({
     success: booleanSchema,
-    goal: objectSchema,
-  }),
-  paput_update_goal: outputSchema({
-    success: booleanSchema,
-    goal: objectSchema,
-  }),
-  paput_delete_goal: outputSchema({
-    success: booleanSchema,
-    deleted_goal_id: numberSchema,
-  }),
-  paput_get_dashboard_analysis: outputSchema({
-    dashboard_analysis: nullableObjectSchema,
+    created_count: numberSchema,
+    updated_count: numberSchema,
+    deleted_count: numberSchema,
+    failed_count: numberSchema,
+    results: objectArraySchema,
+    deleted_ids: numberArraySchema,
   }),
   paput_update_dashboard_analysis: outputSchema({
     success: booleanSchema,
@@ -248,16 +227,6 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
   paput_list_processed_sessions: outputSchema({
     sessions: objectArraySchema,
   }),
-  paput_mark_processed_session: outputSchema(
-    {
-      session_id: stringSchema,
-      source: stringSchema,
-      path: stringSchema,
-      processed_at: stringSchema,
-      source_session_updated_at: stringSchema,
-    },
-    ['session_id', 'source', 'processed_at'],
-  ),
   paput_mark_processed_sessions: outputSchema({
     success: booleanSchema,
     marked_count: numberSchema,
@@ -268,20 +237,11 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
     count: numberSchema,
     candidates: objectArraySchema,
   }),
-  paput_update_pending_candidate: outputSchema({
-    updated: booleanSchema,
-    candidate: objectSchema,
-  }),
-  paput_save_pending_candidate: outputSchema({
+  paput_update_pending_candidates: outputSchema({
     success: booleanSchema,
-    action: stringSchema,
-    candidate_id: stringSchema,
-    memo_id: nullableNumberSchema,
-    title: stringSchema,
-    created_at: stringSchema,
-    created_at_source: stringSchema,
-    used_existing_memo: booleanSchema,
-    warnings: stringArraySchema,
+    updated_count: numberSchema,
+    failed_count: numberSchema,
+    results: objectArraySchema,
   }),
   paput_save_pending_candidates: outputSchema({
     success: booleanSchema,
@@ -289,11 +249,11 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
     failed_count: numberSchema,
     results: objectArraySchema,
   }),
-  paput_discard_pending_candidate: outputSchema({
-    discarded: booleanSchema,
-    candidate_id: stringSchema,
-    title: stringSchema,
-    candidate: objectSchema,
+  paput_discard_pending_candidates: outputSchema({
+    success: booleanSchema,
+    discarded_count: numberSchema,
+    failed_count: numberSchema,
+    results: objectArraySchema,
   }),
   paput_get_capture_policy: capturePolicySchema,
   paput_get_discard_policy_context: outputSchema({

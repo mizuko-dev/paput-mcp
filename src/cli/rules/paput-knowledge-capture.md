@@ -10,7 +10,7 @@ Only keep technical knowledge, decision criteria, and procedures that can be reu
 
 When candidates exist, use the `paput-capture` workflow to check duplicates before adding them: semantically similar existing memos with `paput_search_memo` and existing pending candidates. Classify each candidate by memo type (`knowledge` / `decision` / `operation` / `principle`, multi-label) via `memo_type_keys`; `decision` / `operation` / `principle` are material for durable judgment and working-practice summaries, and `knowledge` is commodity. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending without waiting for user approval. After adding it, briefly report the title, categories, memo type, and candidate ID.
 
-Use `paput_save_pending_candidate` only when the user explicitly approves saving a pending candidate to PaPut.
+Use `paput_save_pending_candidates` only when the user explicitly approves saving pending candidates to PaPut. Pass the approved candidates as a `candidates` array in a single call.
 
 If a candidate may be duplicate, sensitive, project-specific, too narrow, or ambiguous, present its title, body, categories, and concern before adding it to pending, and ask the user to confirm.
 

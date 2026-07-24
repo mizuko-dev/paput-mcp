@@ -4,7 +4,7 @@ import {
   type BulkUpsertProjectResult,
 } from '../../services/api/skill-sheet.js';
 import type { UpsertSkillSheetProjectParams } from '../../types/index.js';
-import { parseProjectParams } from '../upsert-skill-sheet-project/handler.js';
+import { parseProjectParams } from './params.js';
 
 export async function handleUpsertSkillSheetProjects(
   args: Record<string, unknown> | undefined,

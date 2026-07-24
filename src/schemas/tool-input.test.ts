@@ -5,34 +5,15 @@ import {
 } from './tool-input.js';
 
 describe('getGeneratedInputSchema', () => {
-  it('generates required fields for upserting skill sheet projects', () => {
-    const schema = getGeneratedInputSchema('paput_upsert_skill_sheet_project');
+  it('generates the goals array for set goals', () => {
+    const schema = getGeneratedInputSchema('paput_set_goals');
 
     expect(schema).toMatchObject({
       type: 'object',
-      required: [
-        'type',
-        'title',
-        'start_period',
-        'description',
-        'role',
-        'scale',
-        'technologies',
-        'processes',
-        'memos',
-      ],
+      required: ['goals'],
     });
-    expect(schema?.properties.title).toMatchObject({
-      type: 'string',
-      description: 'Project title',
-    });
-    expect(schema?.properties.id).toMatchObject({
-      type: 'number',
-      description: 'Project ID to update. Omit when creating a new project.',
-    });
-    expect(schema?.properties.achievements).toMatchObject({
+    expect(schema?.properties.goals).toMatchObject({
       type: 'array',
-      description: expect.stringContaining('Omit to keep existing values'),
     });
   });
 
@@ -57,22 +38,6 @@ describe('getGeneratedInputSchema', () => {
     expect(getGeneratedInputSchema('paput_unknown')).toBeUndefined();
   });
 
-  it('requires id in the goal update schema', () => {
-    const schema = getGeneratedInputSchema('paput_update_goal');
-
-    expect(schema?.required).toEqual([
-      'title',
-      'category',
-      'status',
-      'priority',
-      'id',
-    ]);
-    expect(schema?.properties.id).toMatchObject({
-      type: 'number',
-      description: 'Goal ID. Required in the update request body.',
-    });
-  });
-
   it('generates dashboard analysis update schema', () => {
     const schema = getGeneratedInputSchema('paput_update_dashboard_analysis');
 
@@ -81,42 +46,6 @@ describe('getGeneratedInputSchema', () => {
       type: 'array',
       description: 'Knowledge suggestions to learn next',
     });
-  });
-});
-
-describe('paput_upsert_skill_sheet_project schema', () => {
-  const schema = getToolInputZodSchema('paput_upsert_skill_sheet_project')!;
-
-  it('describes type 3 as a private project option', () => {
-    const generated = getGeneratedInputSchema(
-      'paput_upsert_skill_sheet_project',
-    );
-
-    expect(generated?.properties.type).toMatchObject({
-      type: 'number',
-      description:
-        'Project type: 1 business, 2 personal, 3 private (hidden from public profile)',
-    });
-  });
-
-  const base = {
-    title: 'Project title',
-    start_period: '2026-01',
-    description: 'Description',
-    role: 'Role',
-    scale: 'Scale',
-    technologies: [],
-    processes: [],
-    memos: [],
-  };
-
-  it('accepts type 3 (private)', () => {
-    expect(schema.safeParse({ ...base, type: 3 }).success).toBe(true);
-  });
-
-  it('still accepts type 1 (business) and 2 (personal)', () => {
-    expect(schema.safeParse({ ...base, type: 1 }).success).toBe(true);
-    expect(schema.safeParse({ ...base, type: 2 }).success).toBe(true);
   });
 });
 

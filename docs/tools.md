@@ -15,27 +15,26 @@ Clients and assistants should follow these rules:
 - Read-only tools may be used when they are relevant to the user's request.
 - Create, update, save, publish, discard, and delete tools should be used only when the user's intent is clear.
 - Destructive tools require explicit confirmation before execution.
-- `paput_save_pending_candidate` requires explicit user approval because it creates a PaPut memo from a pending candidate.
+- `paput_save_pending_candidates` requires explicit user approval because it creates PaPut memos from pending candidates.
 - `paput_delete_skill_sheet_project` should be used only when the user clearly intends to remove a project.
 - `paput_update_skill_sheet_project_episodes` should be used only after the MCP client AI model has drafted project episodes and the user intends to save them.
 - `paput_update_skill_sheet_faq` full-replaces the user-authored FAQ and should be used only after the user explicitly approves the FAQ content.
 - `paput_update_dashboard_analysis` should be used only after the MCP client AI model has generated dashboard analysis and the user intends to save it.
 - `paput_set_skill_sheet_skills` replaces the full skill list and should be used only when the complete desired final list is known.
-- `paput_discard_pending_candidate` removes a pending item from the save flow and should be confirmed when the candidate may still be useful.
-- `paput_delete_goal` should be used only when the user clearly intends to remove a goal.
+- `paput_discard_pending_candidates` removes pending items from the save flow and should be confirmed when a candidate may still be useful.
+- `paput_set_goals` syncs the full goal list and deletes existing goals whose IDs are absent from the list, so it requires explicit user confirmation before removing goals.
 - `paput_update_project_instructions` requires explicit user approval because the instructions are applied to every future session.
 - `paput_discard_project_proposal` and `paput_promote_project_documents` change project document status and should be used only when the user clearly intends to reject a skill proposal or to promote documents into a created skill.
 - Update and upsert tools should preserve existing data unless the user requested the change.
 
 ## Memo Tools
 
-| Tool                   | Safety            | Use case                                                                                                     |
-| ---------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
-| `paput_create_memos`   | Write             | Create multiple PaPut memos in one call and return created memo IDs.                                         |
-| `paput_search_memo`    | Read-only         | Hybrid keyword-and-semantic search over memos, with category, IDs, date, visibility, and pagination filters. |
-| `paput_get_memo`       | Read-only         | Read the full details of a memo by ID.                                                                       |
-| `paput_update_memo`    | Destructive/write | Update an existing memo title, body, visibility, categories, or linked projects.                             |
-| `paput_get_categories` | Read-only         | List categories before assigning categories or checking duplicates.                                          |
+| Tool                   | Safety            | Use case                                                                                                                                                                                                                |
+| ---------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paput_create_memos`   | Write             | Create multiple PaPut memos in one call and return created memo IDs.                                                                                                                                                    |
+| `paput_search_memo`    | Read-only         | Hybrid keyword-and-semantic search over memos, with category, IDs, date, visibility, and pagination filters. Returns the full body, linked projects, and author per memo; pass `ids: [id]` to read a single memo by ID. |
+| `paput_update_memo`    | Destructive/write | Update an existing memo title, body, visibility, categories, or linked projects.                                                                                                                                        |
+| `paput_get_categories` | Read-only         | List categories before assigning categories or checking duplicates.                                                                                                                                                     |
 
 `paput_create_memos` and `paput_update_memo` link projects only when you pass an
 explicit `projects` array or a `project_match` input. They do not auto-link from
@@ -63,17 +62,17 @@ available immediately.
 
 ## Skill Sheet Tools
 
-| Tool                                             | Safety            | Use case                                                                                         |
-| ------------------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------ |
-| `paput_get_skill_sheet`                          | Read-only         | Read the user's PaPut skill sheet.                                                               |
-| `paput_update_skill_sheet_basic_info`            | Destructive/write | Update profile fields such as nearest station, gender, birth date, or years of experience.       |
-| `paput_update_skill_sheet_self_pr`               | Destructive/write | Update the self PR section.                                                                      |
-| `paput_set_skill_sheet_skills`                   | Destructive/write | Replace the full skill list with a known final state.                                            |
-| `paput_upsert_skill_sheet_project`               | Destructive/write | Add or update a skill sheet project by ID or exact title match, including optional achievements. |
-| `paput_delete_skill_sheet_project`               | Destructive       | Delete a skill sheet project by ID.                                                              |
-| `paput_get_skill_sheet_project_episodes_context` | Read-only         | Get project information and public linked memo bodies for MCP client-side episode drafting.      |
-| `paput_update_skill_sheet_project_episodes`      | Destructive/write | Full-replace generated project episodes after explicit user approval.                            |
-| `paput_update_skill_sheet_faq`                   | Destructive/write | Full-replace the user-authored Q&A (FAQ) section after explicit user approval.                   |
+| Tool                                             | Safety            | Use case                                                                                                                                                                                                    |
+| ------------------------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paput_get_skill_sheet`                          | Read-only         | Read the user's PaPut skill sheet.                                                                                                                                                                          |
+| `paput_update_skill_sheet_basic_info`            | Destructive/write | Update profile fields such as nearest station, gender, birth date, or years of experience.                                                                                                                  |
+| `paput_update_skill_sheet_self_pr`               | Destructive/write | Update the self PR section.                                                                                                                                                                                 |
+| `paput_set_skill_sheet_skills`                   | Destructive/write | Replace the full skill list with a known final state.                                                                                                                                                       |
+| `paput_upsert_skill_sheet_projects`              | Destructive/write | Add or update one or more skill sheet projects in one call (single project as a one-element array), each by ID or exact title match, including optional achievements. Elements are processed independently. |
+| `paput_delete_skill_sheet_project`               | Destructive       | Delete a skill sheet project by ID.                                                                                                                                                                         |
+| `paput_get_skill_sheet_project_episodes_context` | Read-only         | Get project information and public linked memo bodies for MCP client-side episode drafting.                                                                                                                 |
+| `paput_update_skill_sheet_project_episodes`      | Destructive/write | Full-replace generated project episodes after explicit user approval.                                                                                                                                       |
+| `paput_update_skill_sheet_faq`                   | Destructive/write | Full-replace the user-authored Q&A (FAQ) section after explicit user approval.                                                                                                                              |
 
 `paput_get_skill_sheet_project_episodes_context` returns project information and
 public linked memo bodies in `structuredContent`; private linked memos are
@@ -96,23 +95,30 @@ item.
 
 ## Goal Tools
 
-| Tool                | Safety            | Use case                                                                            |
-| ------------------- | ----------------- | ----------------------------------------------------------------------------------- |
-| `paput_list_goals`  | Read-only         | List active and archived goals. Active goals are current analysis targets.          |
-| `paput_create_goal` | Write             | Create a goal for career, learning, portfolio, project, or other progress tracking. |
-| `paput_update_goal` | Destructive/write | Update a goal. The update request body includes `id`, and success returns no body.  |
-| `paput_delete_goal` | Destructive       | Delete a goal by ID. The API path uses `/goal/:id`.                                 |
+| Tool               | Safety            | Use case                                                                                                                                                                           |
+| ------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paput_list_goals` | Read-only         | List active and archived goals. Active goals are current analysis targets.                                                                                                         |
+| `paput_set_goals`  | Destructive/write | Sync the full goal list by ID: items with an `id` update, items without an `id` are created, and existing goals whose IDs are absent are deleted. Existing goal IDs are preserved. |
 
 Archived goals are historical context. Active goals are normally used as the basis for
 dashboard analysis.
 
+`paput_set_goals` takes the full desired goal list (`{goals: [{id?, ...}]}`) and
+syncs by ID: existing goals not present in the list are deleted, so read the
+current goals with `paput_list_goals` first and include every goal to keep. The
+result reports `created_count`, `updated_count`, `deleted_count`, per-item
+`results`, and the `deleted_ids` removed for being absent from the list. To
+guard against accidental mass deletion, list-external goals are deleted only
+when every item succeeds: if any item is invalid or fails, no goals are deleted
+and `deleted_ids` is empty. The deletion phase is atomic — if a delete fails it
+is rolled back, `deleted_ids` is empty, and `success` is false.
+
 ## Dashboard Analysis Tools
 
-| Tool                                   | Safety            | Use case                                                                                        |
-| -------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------- |
-| `paput_get_dashboard_analysis`         | Read-only         | Get the saved dashboard analysis result.                                                        |
-| `paput_get_dashboard_analysis_context` | Read-only         | Get dashboard summary, goals, skill sheet, recent memos, notes, and categories for AI analysis. |
-| `paput_update_dashboard_analysis`      | Destructive/write | Save dashboard analysis generated by the MCP client AI model.                                   |
+| Tool                                   | Safety            | Use case                                                                                                                                                              |
+| -------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paput_get_dashboard_analysis_context` | Read-only         | Get dashboard summary, goals, skill sheet, recent memos, notes, and categories for AI analysis. Includes the previously saved analysis as `saved_dashboard_analysis`. |
+| `paput_update_dashboard_analysis`      | Destructive/write | Save dashboard analysis generated by the MCP client AI model.                                                                                                         |
 
 `paput_get_dashboard_analysis_context` returns raw source data in
 `structuredContent` for MCP client-side analysis. The context asks the MCP client
@@ -166,22 +172,22 @@ settled or superseded documents with `paput_update_project_document`'s
 Knowledge capture state is stored by the PaPut API and is available through
 Remote HTTP MCP.
 
-| Tool                               | Safety                 | Use case                                                                        |
-| ---------------------------------- | ---------------------- | ------------------------------------------------------------------------------- |
-| `paput_add_knowledge_candidates`   | Write to pending queue | Add extracted reusable knowledge candidates before they are saved to PaPut.     |
-| `paput_list_processed_sessions`    | Read-only              | List Claude/Codex sessions already reviewed for knowledge capture.              |
-| `paput_mark_processed_session`     | Write                  | Mark a reviewed Claude/Codex session as processed when no candidates are added. |
-| `paput_list_pending_candidates`    | Read-only              | List pending candidates for review.                                             |
-| `paput_update_pending_candidate`   | Write to pending queue | Refine a pending candidate's fields before it is saved.                         |
-| `paput_save_pending_candidate`     | Write                  | Save an approved pending candidate as a PaPut memo.                             |
-| `paput_discard_pending_candidate`  | Destructive action     | Remove a pending candidate from the save flow.                                  |
-| `paput_get_capture_policy`         | Read-only              | Read the capture policy generated from discarded candidates.                    |
-| `paput_get_discard_policy_context` | Read-only              | Read discarded candidates and current policy for AI-side policy analysis.       |
-| `paput_update_capture_policy`      | Write                  | Save the capture policy generated by the AI.                                    |
+| Tool                               | Safety                 | Use case                                                                                                        |
+| ---------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `paput_add_knowledge_candidates`   | Write to pending queue | Add extracted reusable knowledge candidates before they are saved to PaPut.                                     |
+| `paput_list_processed_sessions`    | Read-only              | List Claude/Codex sessions already reviewed for knowledge capture.                                              |
+| `paput_mark_processed_sessions`    | Write                  | Mark one or more reviewed Claude/Codex sessions as processed in one call when no candidates are added.          |
+| `paput_list_pending_candidates`    | Read-only              | List pending candidates for review.                                                                             |
+| `paput_update_pending_candidates`  | Write to pending queue | Refine one or more pending candidates' fields in one call before they are saved (partial update, pending only). |
+| `paput_save_pending_candidates`    | Write                  | Save one or more approved pending candidates as PaPut memos in one call.                                        |
+| `paput_discard_pending_candidates` | Destructive action     | Remove one or more pending candidates from the save flow in one call.                                           |
+| `paput_get_capture_policy`         | Read-only              | Read the capture policy generated from discarded candidates.                                                    |
+| `paput_get_discard_policy_context` | Read-only              | Read discarded candidates and current policy for AI-side policy analysis.                                       |
+| `paput_update_capture_policy`      | Write                  | Save the capture policy generated by the AI.                                                                    |
 
 Capture policy workflow:
 
-1. `paput_discard_pending_candidate` keeps rejected pending candidates with their discard reason.
+1. `paput_discard_pending_candidates` keeps rejected pending candidates with their discard reasons.
 2. `paput_get_discard_policy_context` returns those discarded candidates and the current policy to the MCP client AI.
 3. The MCP client AI summarizes rejection patterns into a concise Markdown policy.
 4. `paput_update_capture_policy` saves that policy.
@@ -192,4 +198,4 @@ and is available through Remote HTTP MCP.
 
 For past-session import, a local-file-capable AI client should read its own
 Claude/Codex session files through the `paput-harvest` skill, then call
-`paput_add_knowledge_candidates` or `paput_mark_processed_session`.
+`paput_add_knowledge_candidates` or `paput_mark_processed_sessions`.

@@ -22,6 +22,18 @@ export interface MemoType {
 
 export type SearchMode = 'filter' | 'hybrid' | 'keyword';
 
+export interface MemoAuthor {
+  id: number;
+  user_id: string;
+  name: string;
+  picture: string;
+}
+
+export interface MemoProject {
+  id: number;
+  title: string;
+}
+
 export interface Memo {
   id: number;
   title: string;
@@ -31,6 +43,8 @@ export interface Memo {
   updated_at: string;
   categories: MemoCategory[];
   memo_types: MemoType[];
+  projects?: MemoProject[];
+  user?: MemoAuthor;
   score?: number;
 }
 

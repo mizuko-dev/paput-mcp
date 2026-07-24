@@ -13,7 +13,7 @@ Create private PaPut memos summarizing these learnings and return their IDs.
 Expected tool flow:
 
 1. `paput_create_memos`
-2. `paput_search_memo` or `paput_get_memo` when the user wants to verify the result
+2. `paput_search_memo` (pass `ids` with the returned memo IDs) when the user wants to verify the result
 
 Use case: quickly save one or more useful items from Claude, ChatGPT, Codex, or another remote MCP client.
 
@@ -48,7 +48,7 @@ Expected flow:
 1. `paput_list_processed_sessions` to skip sessions already reviewed
 2. The local-file-capable AI client reads `~/.codex/sessions/**/*.jsonl`
 3. `paput_add_knowledge_candidates` when reusable candidates are found
-4. `paput_mark_processed_session` when a reviewed session has no candidates
+4. `paput_mark_processed_sessions` when reviewed sessions have no candidates
 
 Use case: turn completed development work into reviewable knowledge without immediately publishing it to PaPut.
 
@@ -68,7 +68,7 @@ Expected tool flow:
 
 1. `paput_list_pending_candidates`
 2. `paput_search_memo`
-3. `paput_save_pending_candidate` only after explicit user approval
+3. `paput_save_pending_candidates` only after explicit user approval (pass a single candidate as a one-element array)
 
 Use case: keep the user in control before creating a permanent PaPut memo.
 
@@ -106,7 +106,7 @@ Update my PaPut skill sheet project for the MCP server work with the latest tech
 Expected tool flow:
 
 1. `paput_get_skill_sheet`
-2. `paput_upsert_skill_sheet_project`
+2. `paput_upsert_skill_sheet_projects` (pass the single project as a one-element array)
 3. `paput_get_skill_sheet` to verify the final result
 
 Use case: maintain an accurate skill sheet after project milestones.
@@ -137,10 +137,10 @@ Analyze my PaPut dashboard and goals, then save the dashboard analysis.
 
 Expected tool flow:
 
-1. `paput_get_dashboard_analysis_context`
+1. `paput_get_dashboard_analysis_context` (the previously saved analysis is included as `saved_dashboard_analysis`)
 2. MCP client AI generates the analysis from `structuredContent`
 3. `paput_update_dashboard_analysis` after the user intends to save the result
-4. `paput_get_dashboard_analysis` to verify the saved result
+4. `paput_get_dashboard_analysis_context` again to verify the saved result in `saved_dashboard_analysis`
 
 Use case: keep analysis generation in the MCP client AI while PaPut MCP only
 retrieves source data and saves the finished analysis.
@@ -174,7 +174,7 @@ Draft a new self PR for my PaPut skill sheet and save it after I approve it.
 Expected tool flow:
 
 1. `paput_get_skill_sheet`
-2. `paput_search_memo` and `paput_get_memo` only when additional public memo evidence is needed
+2. `paput_search_memo` only when additional public memo evidence is needed (use `ids` to pull specific memo bodies)
 3. MCP client AI drafts the self PR
 4. `paput_update_skill_sheet_self_pr` after the user approves the text
 5. `paput_get_skill_sheet` to verify the saved result
@@ -193,7 +193,7 @@ Find my PaPut memos related to database schema migration tooling, even if they u
 Expected tool flow:
 
 1. `paput_search_memo` with a natural-language `query`
-2. `paput_get_memo` when the user wants the full body of a result
+2. `paput_search_memo` with `ids` when the user wants the full body of a specific result
 
 Use case: discover related knowledge or near-duplicate memos when the saved
 memos use different wording than the query (for example, "DB 移行" vs

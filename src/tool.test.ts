@@ -8,7 +8,6 @@ import type { OnboardingContext } from './types/index.js';
 const expectedToolNames = [
   'paput_create_memos',
   'paput_search_memo',
-  'paput_get_memo',
   'paput_update_memo',
   'paput_get_categories',
   'paput_create_note',
@@ -19,17 +18,13 @@ const expectedToolNames = [
   'paput_update_skill_sheet_basic_info',
   'paput_update_skill_sheet_self_pr',
   'paput_set_skill_sheet_skills',
-  'paput_upsert_skill_sheet_project',
   'paput_upsert_skill_sheet_projects',
   'paput_delete_skill_sheet_project',
   'paput_get_skill_sheet_project_episodes_context',
   'paput_update_skill_sheet_project_episodes',
   'paput_update_skill_sheet_faq',
   'paput_list_goals',
-  'paput_create_goal',
-  'paput_update_goal',
-  'paput_delete_goal',
-  'paput_get_dashboard_analysis',
+  'paput_set_goals',
   'paput_update_dashboard_analysis',
   'paput_get_dashboard_analysis_context',
   'paput_get_project_context',
@@ -42,13 +37,11 @@ const expectedToolNames = [
   'paput_promote_project_documents',
   'paput_add_knowledge_candidates',
   'paput_list_processed_sessions',
-  'paput_mark_processed_session',
   'paput_mark_processed_sessions',
   'paput_list_pending_candidates',
-  'paput_update_pending_candidate',
-  'paput_save_pending_candidate',
+  'paput_update_pending_candidates',
   'paput_save_pending_candidates',
-  'paput_discard_pending_candidate',
+  'paput_discard_pending_candidates',
   'paput_get_capture_policy',
   'paput_get_discard_policy_context',
   'paput_update_capture_policy',
@@ -56,14 +49,12 @@ const expectedToolNames = [
 
 const readOnlyToolNames = [
   'paput_search_memo',
-  'paput_get_memo',
   'paput_get_categories',
   'paput_search_notes',
   'paput_get_note',
   'paput_get_skill_sheet',
   'paput_get_skill_sheet_project_episodes_context',
   'paput_list_goals',
-  'paput_get_dashboard_analysis',
   'paput_get_dashboard_analysis_context',
   'paput_get_project_context',
   'paput_get_project_document',
@@ -80,22 +71,19 @@ const destructiveToolNames = [
   'paput_update_skill_sheet_basic_info',
   'paput_update_skill_sheet_self_pr',
   'paput_set_skill_sheet_skills',
-  'paput_upsert_skill_sheet_project',
   'paput_upsert_skill_sheet_projects',
   'paput_delete_skill_sheet_project',
   'paput_update_skill_sheet_project_episodes',
   'paput_update_skill_sheet_faq',
-  'paput_update_goal',
-  'paput_delete_goal',
+  'paput_set_goals',
   'paput_update_dashboard_analysis',
   'paput_update_project_document',
   'paput_update_project_instructions',
   'paput_discard_project_proposal',
   'paput_promote_project_documents',
-  'paput_mark_processed_session',
   'paput_mark_processed_sessions',
-  'paput_update_pending_candidate',
-  'paput_discard_pending_candidate',
+  'paput_update_pending_candidates',
+  'paput_discard_pending_candidates',
   'paput_update_capture_policy',
 ];
 
@@ -107,12 +95,10 @@ const openWorldToolNames = [
   'paput_update_skill_sheet_basic_info',
   'paput_update_skill_sheet_self_pr',
   'paput_set_skill_sheet_skills',
-  'paput_upsert_skill_sheet_project',
   'paput_upsert_skill_sheet_projects',
   'paput_delete_skill_sheet_project',
   'paput_update_skill_sheet_project_episodes',
   'paput_update_skill_sheet_faq',
-  'paput_save_pending_candidate',
   'paput_save_pending_candidates',
 ];
 
@@ -199,8 +185,14 @@ describe('registered tools', () => {
       },
     });
     expect(
-      schemas.paput_save_pending_candidate.properties.memo_type_keys,
-    ).toMatchObject(memoTypeSchemaMatcher());
+      schemas.paput_update_pending_candidates.properties.candidates,
+    ).toMatchObject({
+      items: {
+        properties: {
+          memo_type_keys: memoTypeSchemaMatcher(),
+        },
+      },
+    });
   });
 
   it('uses English descriptions for every registered tool', () => {
@@ -355,118 +347,10 @@ describe('onboarding nudges', () => {
     expect(onboarding.claimNudge).not.toHaveBeenCalled();
   });
 
-  it('invalidates status without adding a nudge when candidate saving fails after memo creation', async () => {
-    const onboarding = createOnboardingContext({
-      memo_count: 0,
-      has_skill_sheet: false,
-    });
-    const partialResult = {
-      structuredContent: {
-        success: false,
-        action: 'save_candidate_failed_after_memo_created',
-        candidate_id: 'candidate-1',
-        memo_id: 123,
-        retry_args: {
-          candidate_id: 'candidate-1',
-          saved_memo_id: 123,
-        },
-      },
-      content: [{ type: 'text', text: 'Candidate saving failed' }],
-      isError: true,
-    };
-
-    const result = await processToolResult(
-      'paput_save_pending_candidate',
-      partialResult,
-      { onboarding },
-    );
-
-    expect(result).toBe(partialResult);
-    expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
-    expect(onboarding.getStatus).not.toHaveBeenCalled();
-    expect(onboarding.claimNudge).not.toHaveBeenCalled();
-  });
-
-  it.each([false, true])(
-    'invalidates status after a successful candidate save (used existing memo: %s)',
-    async (usedExistingMemo) => {
-      const onboarding = createOnboardingContext({
-        memo_count: 0,
-        has_skill_sheet: false,
-      });
-      const successResult = {
-        structuredContent: {
-          success: true,
-          action: 'saved',
-          candidate_id: 'candidate-1',
-          memo_id: 123,
-          used_existing_memo: usedExistingMemo,
-        },
-        content: [{ type: 'text', text: 'Candidate saved' }],
-      };
-
-      const result = await processToolResult(
-        'paput_save_pending_candidate',
-        successResult,
-        { onboarding },
-      );
-
-      expect(result).toBe(successResult);
-      expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
-      expect(onboarding.getStatus).not.toHaveBeenCalled();
-      expect(onboarding.claimNudge).not.toHaveBeenCalled();
-    },
-  );
-
-  it.each([
-    [
-      'input validation failure',
-      {
-        content: [{ type: 'text', text: 'candidate_id is required' }],
-        isError: true,
-      },
-    ],
-    [
-      'memo creation failure',
-      {
-        content: [{ type: 'text', text: 'Failed to save knowledge candidate' }],
-        isError: true,
-      },
-    ],
-    [
-      'another structured failure',
-      {
-        structuredContent: { action: 'another_failure' },
-        content: [{ type: 'text', text: 'Failed' }],
-        isError: true,
-      },
-    ],
-  ])(
-    'does not invalidate status for candidate %s',
-    async (_label, errorResult) => {
-      const onboarding = createOnboardingContext({
-        memo_count: 0,
-        has_skill_sheet: false,
-      });
-
-      const result = await processToolResult(
-        'paput_save_pending_candidate',
-        errorResult,
-        { onboarding },
-      );
-
-      expect(result).toBe(errorResult);
-      expect(onboarding.invalidateStatus).not.toHaveBeenCalled();
-      expect(onboarding.getStatus).not.toHaveBeenCalled();
-      expect(onboarding.claimNudge).not.toHaveBeenCalled();
-    },
-  );
-
   it.each([
     'paput_create_memos',
     'paput_update_skill_sheet_basic_info',
     'paput_set_skill_sheet_skills',
-    'paput_upsert_skill_sheet_project',
     'paput_upsert_skill_sheet_projects',
     'paput_save_pending_candidates',
   ])('invalidates status after a successful %s write', async (toolName) => {
@@ -502,9 +386,13 @@ describe('onboarding nudges', () => {
       isError: true,
     };
 
-    await processToolResult('paput_upsert_skill_sheet_projects', partialResult, {
-      onboarding,
-    });
+    await processToolResult(
+      'paput_upsert_skill_sheet_projects',
+      partialResult,
+      {
+        onboarding,
+      },
+    );
 
     expect(onboarding.invalidateStatus).toHaveBeenCalledOnce();
     expect(onboarding.getStatus).not.toHaveBeenCalled();
@@ -581,8 +469,20 @@ describe('onboarding nudges', () => {
         saved_count: 0,
         failed_count: 2,
         results: [
-          { index: 0, candidate_id: '', saved_memo_id: null, status: 'failed', error: 'candidate_id is required' },
-          { index: 1, candidate_id: 'c2', saved_memo_id: null, status: 'failed', error: 'Candidate not found among pending candidates' },
+          {
+            index: 0,
+            candidate_id: '',
+            saved_memo_id: null,
+            status: 'failed',
+            error: 'candidate_id is required',
+          },
+          {
+            index: 1,
+            candidate_id: 'c2',
+            saved_memo_id: null,
+            status: 'failed',
+            error: 'Candidate not found among pending candidates',
+          },
         ],
       },
       content: [{ type: 'text', text: 'all failed' }],
