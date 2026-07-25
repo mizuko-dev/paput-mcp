@@ -74,7 +74,9 @@ current state first and skip work that is already complete.
    installed plugin, use `npx -y paput-mcp setup-ai --rules-only` so the command
    adds the global rules without creating a second skill installation. Explain
    that these rules make the PaPut completion checks and reusable-knowledge
-   capture run in future work sessions.
+   capture run in future work sessions, and that re-running the same command
+   later refreshes them whenever the installed rule version differs from the
+   CLI being run.
 
 8. Resolve the public profile URL before presenting it:
    - When an owned memo ID is available from the quick harvest, the save result,

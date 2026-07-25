@@ -107,13 +107,22 @@ The setup command:
 - Creates symlinks under `~/.agents/skills` when Codex is available
 - Adds PaPut usage rules to Claude/Codex global instruction files
 
+The rules are written inside a managed block tagged with the version that
+produced it (`<!-- paput-mcp:start v<version> -->`). Re-running the command
+rewrites that block whenever its version differs from the CLI you run, so keep
+it handy to pick up rule revisions. Note that this is a plain match, not a
+comparison: running an older pinned CLI rewrites the block with that older
+version's rules. A block that already matches the version you run is left
+untouched unless you pass `--force`.
+
 Options:
 
 ```bash
 # Do not update global rules
 npx -y paput-mcp setup-ai --no-rules
 
-# Refresh PaPut-managed links and rule blocks
+# Refresh PaPut-managed links, and rewrite the rule block even when it is
+# already on the current version
 npx -y paput-mcp setup-ai --force
 
 # Configure only Claude or only Codex
@@ -129,8 +138,8 @@ npx -y paput-mcp setup-ai --remove-skills
 ```
 
 Migrating to the PaPut plugin? Run `setup-ai --remove-skills` to drop the
-CLI-installed skills, then `setup-ai --rules-only --force` to keep the global
-rules up to date. The plugin provides the same skills under the `paput`
+CLI-installed skills, then `setup-ai --rules-only` to keep the global rules up
+to date. The plugin provides the same skills under the `paput`
 namespace (e.g. `/paput:capture`).
 
 Generated skills:

@@ -31,6 +31,9 @@ interface SkillSpec {
 
 const skillsDir = fileURLToPath(new URL('../plugin/skills', import.meta.url));
 const rulesDir = fileURLToPath(new URL('./rules', import.meta.url));
+const packageJsonPath = fileURLToPath(
+  new URL('../../package.json', import.meta.url),
+);
 
 function parseSkill(markdown: string, fallbackName: string): SkillSpec {
   const match = markdown.match(/^---\n([\s\S]*?)\n---\n\n([\s\S]*?)\n?$/);
@@ -69,8 +72,13 @@ const RULES = readdirSync(rulesDir)
   .map((fileName) => readFileSync(join(rulesDir, fileName), 'utf8').trim())
   .join('\n\n');
 
-const RULE_START = '<!-- paput-mcp:start -->';
+export const RULES_VERSION: string = JSON.parse(
+  readFileSync(packageJsonPath, 'utf8'),
+).version;
+
+const RULE_START = `<!-- paput-mcp:start v${RULES_VERSION} -->`;
 const RULE_END = '<!-- paput-mcp:end -->';
+const RULE_START_SOURCE = '<!-- paput-mcp:start(?: v([^\\s>]+))? -->';
 
 export function setupAi(args: string[]): void {
   const options = parseOptions(args);
@@ -158,7 +166,9 @@ function printSetupNotice(options: SetupOptions): void {
     }
   }
   if (!options.noRules) {
-    console.log('- Add PaPut usage rules to Claude/Codex global rules');
+    console.log(
+      `- Add PaPut usage rules (v${RULES_VERSION}) to Claude/Codex global rules, refreshing an older managed block`,
+    );
   }
   console.log('');
   console.log('Use --no-rules if you do not want to update global rules.');
@@ -166,7 +176,7 @@ function printSetupNotice(options: SetupOptions): void {
     'Use --rules-only to update global rules without installing skills (e.g. when skills come from the PaPut plugin).',
   );
   console.log(
-    'Use --force to refresh existing PaPut-managed blocks and links.',
+    'Use --force to refresh existing PaPut-managed links, and to rewrite the rules block even when it is already on the current version.',
   );
   console.log('');
 }
@@ -358,19 +368,27 @@ function upsertRules(path: string, force: boolean, label: string): void {
   const block = `${RULE_START}\n${RULES}\n${RULE_END}`;
   const current = existsSync(path) ? readFileSync(path, 'utf8') : '';
   const pattern = new RegExp(
-    `${escapeRegExp(RULE_START)}[\\s\\S]*?${escapeRegExp(RULE_END)}`,
+    `${RULE_START_SOURCE}[\\s\\S]*?${escapeRegExp(RULE_END)}`,
   );
+  const existing = current.match(pattern);
 
-  if (pattern.test(current)) {
-    if (!force) {
+  if (existing) {
+    const installedVersion = existing[1];
+    if (!force && installedVersion === RULES_VERSION) {
       console.log(
-        `Skip ${label} rules: ${path} already contains a PaPut-managed block.`,
+        `Skip ${label} rules: ${path} already contains PaPut rules v${RULES_VERSION}.`,
       );
       return;
     }
 
-    writeFileSync(path, current.replace(pattern, block), 'utf8');
-    console.log(`Update ${label} rules: ${path}`);
+    writeFileSync(
+      path,
+      current.replace(pattern, () => block),
+      'utf8',
+    );
+    console.log(
+      `Update ${label} rules: ${path} (${installedVersion ? `v${installedVersion}` : 'unversioned'} -> v${RULES_VERSION})`,
+    );
     return;
   }
 

@@ -12,7 +12,15 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { findSkill, renderSkill, setupAi, SKILLS } from './setup-ai.js';
+import {
+  findSkill,
+  renderSkill,
+  RULES_VERSION,
+  setupAi,
+  SKILLS,
+} from './setup-ai.js';
+
+const RULE_START = `<!-- paput-mcp:start v${RULES_VERSION} -->`;
 
 describe('setupAi', () => {
   const envKeys = [
@@ -175,19 +183,19 @@ describe('setupAi', () => {
 
     const content = readFileSync(claudeMd, 'utf8');
     expect(content).toContain('# My rules');
-    expect(content).toContain('<!-- paput-mcp:start -->');
+    expect(content).toContain(RULE_START);
     expect(content).toContain('<!-- paput-mcp:end -->');
     expect(readFileSync(join(codexHome, 'AGENTS.md'), 'utf8')).toContain(
-      '<!-- paput-mcp:start -->',
+      RULE_START,
     );
   });
 
-  it('refreshes an existing managed block only with --force', () => {
+  it('keeps a managed block of the same version untouched without --force', () => {
     mkdirSync(claudeHome, { recursive: true });
     const claudeMd = join(claudeHome, 'CLAUDE.md');
     writeFileSync(
       claudeMd,
-      '# Before\n\n<!-- paput-mcp:start -->\nold block\n<!-- paput-mcp:end -->\n\n# After\n',
+      `# Before\n\n${RULE_START}\nold block\n<!-- paput-mcp:end -->\n\n# After\n`,
       'utf8',
     );
 
@@ -199,7 +207,63 @@ describe('setupAi', () => {
     expect(content).not.toContain('old block');
     expect(content).toContain('# Before');
     expect(content).toContain('# After');
-    expect(content.match(/<!-- paput-mcp:start -->/g)).toHaveLength(1);
+    expect(content.match(/<!-- paput-mcp:start/g)).toHaveLength(1);
+  });
+
+  it('refreshes an outdated managed block without --force', () => {
+    mkdirSync(claudeHome, { recursive: true });
+    const claudeMd = join(claudeHome, 'CLAUDE.md');
+    writeFileSync(
+      claudeMd,
+      '# Before\n\n<!-- paput-mcp:start v0.0.1 -->\nold block\n<!-- paput-mcp:end -->\n\n# After\n',
+      'utf8',
+    );
+
+    setupAi([]);
+
+    const content = readFileSync(claudeMd, 'utf8');
+    expect(content).not.toContain('old block');
+    expect(content).toContain(RULE_START);
+    expect(content).toContain('# Before');
+    expect(content).toContain('# After');
+    expect(content.match(/<!-- paput-mcp:start/g)).toHaveLength(1);
+  });
+
+  it('rewrites a block written by a newer version, matching rather than comparing', () => {
+    mkdirSync(claudeHome, { recursive: true });
+    const claudeMd = join(claudeHome, 'CLAUDE.md');
+    writeFileSync(
+      claudeMd,
+      '# Before\n\n<!-- paput-mcp:start v999.0.0 -->\nnewer block\n<!-- paput-mcp:end -->\n\n# After\n',
+      'utf8',
+    );
+
+    setupAi([]);
+
+    const content = readFileSync(claudeMd, 'utf8');
+    expect(content).not.toContain('newer block');
+    expect(content).toContain(RULE_START);
+    expect(content).toContain('# Before');
+    expect(content).toContain('# After');
+  });
+
+  it('migrates an unversioned managed block in place', () => {
+    mkdirSync(claudeHome, { recursive: true });
+    const claudeMd = join(claudeHome, 'CLAUDE.md');
+    writeFileSync(
+      claudeMd,
+      '# Before\n\n<!-- paput-mcp:start -->\nold block\n<!-- paput-mcp:end -->\n\n# After\n',
+      'utf8',
+    );
+
+    setupAi([]);
+
+    const content = readFileSync(claudeMd, 'utf8');
+    expect(content).not.toContain('old block');
+    expect(content).toContain(RULE_START);
+    expect(content).toContain('# Before');
+    expect(content).toContain('# After');
+    expect(content.match(/<!-- paput-mcp:start/g)).toHaveLength(1);
   });
 
   it('does not touch rules files with --no-rules', () => {
@@ -240,10 +304,10 @@ describe('setupAi', () => {
     expect(existsSync(join(claudeHome, 'skills'))).toBe(false);
     expect(existsSync(join(agentsHome, 'skills'))).toBe(false);
     expect(readFileSync(join(claudeHome, 'CLAUDE.md'), 'utf8')).toContain(
-      '<!-- paput-mcp:start -->',
+      RULE_START,
     );
     expect(readFileSync(join(codexHome, 'AGENTS.md'), 'utf8')).toContain(
-      '<!-- paput-mcp:start -->',
+      RULE_START,
     );
   });
 
@@ -269,7 +333,7 @@ describe('setupAi', () => {
     expect(existsSync(unrelatedDir)).toBe(true);
     expect(lstatSync(foreignLink).isSymbolicLink()).toBe(true);
     expect(readFileSync(join(claudeHome, 'CLAUDE.md'), 'utf8')).toContain(
-      '<!-- paput-mcp:start -->',
+      RULE_START,
     );
   });
 
