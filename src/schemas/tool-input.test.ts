@@ -5,6 +5,19 @@ import {
 } from './tool-input.js';
 
 describe('getGeneratedInputSchema', () => {
+  it('advertises project_id and ids body retrieval for memo search', () => {
+    const schema = getGeneratedInputSchema('paput_search_memo');
+
+    expect(schema?.properties.project_id).toMatchObject({
+      type: 'number',
+      description: expect.stringContaining('filter and hybrid'),
+    });
+    expect(schema?.properties.ids).toMatchObject({
+      type: 'array',
+      description: expect.stringContaining('include body'),
+    });
+  });
+
   it('generates the goals array for set goals', () => {
     const schema = getGeneratedInputSchema('paput_set_goals');
 

@@ -3,7 +3,7 @@ import { getCategories } from '../../services/api/category.js';
 import { getDashboardSummary } from '../../services/api/dashboard.js';
 import { getDashboardAnalysis } from '../../services/api/dashboard-analysis.js';
 import { listGoals } from '../../services/api/goal.js';
-import { searchMemos } from '../../services/api/memo.js';
+import { searchMemosWithBodies } from '../../services/api/memo.js';
 import { searchNotes } from '../../services/api/note.js';
 import { getSkillSheet } from '../../services/api/skill-sheet.js';
 
@@ -28,7 +28,7 @@ export async function handleGetDashboardAnalysisContext(
     ] = await Promise.all([
       safeFetch(() => getSkillSheet(apiClient)),
       safeFetch(() =>
-        searchMemos(apiClient, {
+        searchMemosWithBodies(apiClient, {
           page: 1,
           limit: RECENT_ITEM_LIMIT,
         }),

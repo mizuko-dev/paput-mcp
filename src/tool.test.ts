@@ -157,6 +157,21 @@ describe('registered tools', () => {
     }
   });
 
+  it('describes memo search index and ids detail output shapes', () => {
+    const tool = getRegisteredTools().find(
+      (item) => item.definition.name === 'paput_search_memo',
+    );
+    const memoSchemas = (
+      tool?.definition.outputSchema?.properties.memos as {
+        items?: { anyOf?: Array<{ required?: string[] }> };
+      }
+    ).items?.anyOf;
+
+    expect(memoSchemas).toHaveLength(2);
+    expect(memoSchemas?.[0]?.required).not.toContain('body');
+    expect(memoSchemas?.[1]?.required).toContain('body');
+  });
+
   it('keeps handler-defined memo type properties when annotating tools', () => {
     const schemas = Object.fromEntries(
       getRegisteredTools().map((tool) => [

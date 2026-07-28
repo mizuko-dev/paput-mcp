@@ -29,12 +29,12 @@ Clients and assistants should follow these rules:
 
 ## Memo Tools
 
-| Tool                   | Safety            | Use case                                                                                                                                                                                                                |
-| ---------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `paput_create_memos`   | Write             | Create multiple PaPut memos in one call and return created memo IDs.                                                                                                                                                    |
-| `paput_search_memo`    | Read-only         | Hybrid keyword-and-semantic search over memos, with category, IDs, date, visibility, and pagination filters. Returns the full body, linked projects, and author per memo; pass `ids: [id]` to read a single memo by ID. |
-| `paput_update_memo`    | Destructive/write | Update an existing memo title, body, visibility, categories, or linked projects.                                                                                                                                        |
-| `paput_get_categories` | Read-only         | List categories before assigning categories or checking duplicates.                                                                                                                                                     |
+| Tool                   | Safety            | Use case                                                                                                                                                                                                                                       |
+| ---------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paput_create_memos`   | Write             | Create multiple PaPut memos in one call and return created memo IDs.                                                                                                                                                                           |
+| `paput_search_memo`    | Read-only         | Hybrid keyword-and-semantic search over memos, with category, memo type, project ID, IDs, date, visibility, and pagination filters. Normal results are summary index entries without body; pass selected IDs in `ids` to retrieve full bodies. |
+| `paput_update_memo`    | Destructive/write | Update an existing memo title, body, visibility, categories, or linked projects.                                                                                                                                                               |
+| `paput_get_categories` | Read-only         | List categories before assigning categories or checking duplicates.                                                                                                                                                                            |
 
 `paput_create_memos` and `paput_update_memo` link projects only when you pass an
 explicit `projects` array or a `project_match` input. They do not auto-link from
@@ -46,7 +46,10 @@ keyword-and-semantic matching (matches include a `score` when they come from
 the semantic side; keyword-only matches do not), or omit `query` to page
 through a plain filtered list ordered by most recently updated. It covers
 topic discovery, near-duplicate checks, and exact words, IDs, or identifiers
-alike, and it only returns memos owned by the authenticated user.
+alike, and it only returns memos owned by the authenticated user. Search
+normally to inspect the summary index, then call it again with the selected
+result IDs in `ids` to retrieve and compare their bodies. The `project_id`
+filter is supported in both filtered and hybrid search.
 
 New and updated memos get embeddings automatically, so semantic matching is
 available immediately.

@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from './client.js';
-import { createMemo, createMemos, searchMemos, updateMemo } from './memo.js';
+import {
+  createMemo,
+  createMemos,
+  searchMemos,
+  searchMemosWithBodies,
+  updateMemo,
+} from './memo.js';
 
 function createMockClient(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -28,7 +34,7 @@ describe('memo API service', () => {
       });
 
       expect(client.get).toHaveBeenCalledWith(
-        '/api/v1/mcp/memos?query=Go+context&category_id=2&ids%5B%5D=1&ids%5B%5D=2&is_public=true&project_id=3&page=2&limit=10',
+        '/api/v1/mcp/memos?query=Go+context&category_id=2&ids=1&ids=2&is_public=true&project_id=3&page=2&limit=10',
       );
     });
 
@@ -40,6 +46,14 @@ describe('memo API service', () => {
       expect(client.get).toHaveBeenCalledWith(
         '/api/v1/mcp/memos?date=2026-06-14',
       );
+    });
+
+    it('sends the project filter without a query', async () => {
+      const client = createMockClient();
+
+      await searchMemos(client, { project_id: 7 });
+
+      expect(client.get).toHaveBeenCalledWith('/api/v1/mcp/memos?project_id=7');
     });
 
     it('omits the query string when no options are given', async () => {
@@ -78,6 +92,74 @@ describe('memo API service', () => {
         success: false,
         error: 'boom',
       });
+    });
+  });
+
+  describe('searchMemosWithBodies', () => {
+    it('hydrates index results through an ids detail request', async () => {
+      const client = createMockClient({
+        get: vi
+          .fn()
+          .mockResolvedValueOnce({
+            memos: [
+              {
+                id: 2,
+                title: 'Second',
+                summary: 'Summary',
+                score: 0.8,
+              },
+              { id: 1, title: 'First', summary: 'Summary' },
+            ],
+            total: 2,
+            search_mode: 'hybrid',
+          })
+          .mockResolvedValueOnce({
+            memos: [
+              { id: 1, body: 'First body' },
+              { id: 2, body: 'Second body' },
+            ],
+            total: 2,
+            search_mode: 'filter',
+          }),
+      });
+
+      const result = await searchMemosWithBodies(client, {
+        query: 'decision',
+        limit: 2,
+      });
+
+      expect(result).toEqual({
+        success: true,
+        memos: [
+          {
+            id: 2,
+            title: 'Second',
+            summary: 'Summary',
+            score: 0.8,
+            body: 'Second body',
+          },
+          {
+            id: 1,
+            title: 'First',
+            summary: 'Summary',
+            body: 'First body',
+          },
+        ],
+        total: 2,
+        search_mode: 'hybrid',
+      });
+      expect(client.get).toHaveBeenNthCalledWith(
+        1,
+        '/api/v1/mcp/memos?query=decision&limit=2',
+      );
+      expect(client.get).toHaveBeenNthCalledWith(
+        2,
+        '/api/v1/mcp/memos?ids=2&ids=1',
+      );
+      expect(result.memos?.map((memo) => memo.body)).toEqual([
+        'Second body',
+        'First body',
+      ]);
     });
   });
 

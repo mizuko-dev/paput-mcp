@@ -20,8 +20,10 @@ gets asked and what gets said.
    - **Memo-derived**: call `paput_get_categories` to see category
      distribution, then `paput_search_memo` (prefer `memo_type: decision`,
      `operation`, `principle`; private memos are fine as material) to find
-     clusters. For each cluster, propose a question the user could answer with
-     that evidence.
+     clusters from the summary index. Select only the strongest evidence
+     candidates, call `paput_search_memo` again with their IDs in `ids` to
+     fetch the bodies, and compare those bodies before proposing a question
+     the user could answer with that evidence.
    - **General interview FAQ**: search the web for common technical interview
      questions, then filter the results to the user's actual skills and
      domains. If web search is not available in the current client, fall back

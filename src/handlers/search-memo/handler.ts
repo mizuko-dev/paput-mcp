@@ -29,6 +29,9 @@ export async function handleSearchMemo(
     if (typeof args.is_public === 'boolean') {
       params.is_public = args.is_public;
     }
+    if (typeof args.project_id === 'number') {
+      params.project_id = args.project_id;
+    }
     if (typeof args.page === 'number') {
       params.page = args.page;
     }
@@ -70,8 +73,16 @@ export async function handleSearchMemo(
       };
     }
 
+    const includeBody = (params.ids?.length ?? 0) > 0;
+    const memos = result.memos.map((memo) => {
+      const outputMemo = { ...memo };
+      if (!includeBody) {
+        delete outputMemo.body;
+      }
+      return outputMemo;
+    });
     const showMatchInfo = searchMode !== 'filter';
-    const memoList = result.memos
+    const memoList = memos
       .map((memo) => {
         const categories =
           memo.categories.length > 0
@@ -88,10 +99,13 @@ export async function handleSearchMemo(
             : ', keyword match'
           : '';
 
+        const body =
+          includeBody && memo.body !== undefined ? `\nBody:\n${memo.body}` : '';
+
         return `【${memo.title}】(ID: ${memo.id}, ${visibility}${match})
 ${categories}
 ${memoTypes}
-${memo.body}
+Summary: ${memo.summary}${body}
 (Created at: ${memo.created_at})`;
       })
       .join('\n\n---\n\n');
@@ -99,7 +113,7 @@ ${memo.body}
     return {
       structuredContent: {
         total: result.total,
-        memos: result.memos,
+        memos,
         search_mode: searchMode,
       },
       content: [

@@ -1,5 +1,8 @@
 import { ApiClient } from '../../services/api/client.js';
-import { searchMemos } from '../../services/api/memo.js';
+import {
+  searchMemos,
+  searchMemosWithBodies,
+} from '../../services/api/memo.js';
 import { getSkillSheet } from '../../services/api/skill-sheet.js';
 import type { Memo } from '../../types/index.js';
 
@@ -121,7 +124,7 @@ async function fetchProjectMemos(
   let total: number | undefined;
 
   do {
-    const result = await searchMemos(apiClient, {
+    const result = await searchMemosWithBodies(apiClient, {
       project_id: projectId,
       is_public: isPublic,
       page,

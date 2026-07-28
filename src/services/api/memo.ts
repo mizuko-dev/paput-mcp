@@ -81,7 +81,7 @@ export async function searchMemos(
       queryParams.append('category_id', params.category_id.toString());
     if (params.memo_type) queryParams.append('memo_type', params.memo_type);
     if (params.ids && params.ids.length > 0) {
-      params.ids.forEach((id) => queryParams.append('ids[]', id.toString()));
+      params.ids.forEach((id) => queryParams.append('ids', id.toString()));
     }
     if (params.is_public !== undefined)
       queryParams.append('is_public', params.is_public.toString());
@@ -108,6 +108,54 @@ export async function searchMemos(
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
+}
+
+export async function searchMemosWithBodies(
+  client: ApiClient,
+  params: SearchMemoParams,
+): Promise<SearchMemoResponse> {
+  const indexResult = await searchMemos(client, params);
+  if (
+    !indexResult.success ||
+    !indexResult.memos ||
+    indexResult.memos.length === 0 ||
+    (params.ids?.length ?? 0) > 0
+  ) {
+    return indexResult;
+  }
+
+  const detailResult = await searchMemos(client, {
+    ids: indexResult.memos.map((memo) => memo.id),
+  });
+  if (!detailResult.success || !detailResult.memos) {
+    return detailResult;
+  }
+
+  const bodiesByID = new Map(
+    detailResult.memos
+      .filter(
+        (memo): memo is typeof memo & { body: string } =>
+          memo.body !== undefined,
+      )
+      .map((memo) => [memo.id, memo.body]),
+  );
+  const missingBody = indexResult.memos.find(
+    (memo) => !bodiesByID.has(memo.id),
+  );
+  if (missingBody) {
+    return {
+      success: false,
+      error: `Memo body was not returned for ID ${missingBody.id}`,
+    };
+  }
+
+  return {
+    ...indexResult,
+    memos: indexResult.memos.map((memo) => ({
+      ...memo,
+      body: bodiesByID.get(memo.id)!,
+    })),
+  };
 }
 
 export async function updateMemo(

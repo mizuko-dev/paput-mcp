@@ -222,7 +222,7 @@ Detailed public tool documentation is available in [docs/tools.md](docs/tools.md
 ### Memo Management
 
 - `paput_create_memos` - Create multiple PaPut memos in one call and return created memo IDs.
-- `paput_search_memo` - Hybrid search over PaPut memos (keyword + semantic). Finds related memos even when the wording differs, with filters for category, memo type, IDs, date, and visibility. Returns the full body, linked projects, and author for each memo; pass `ids: [id]` to fetch a single memo by ID.
+- `paput_search_memo` - Hybrid search over PaPut memos (keyword + semantic). Finds related memos even when the wording differs, with filters for category, memo type, project ID, IDs, date, and visibility. Normal results are summary index entries without the body; pass selected result IDs in `ids` to fetch their full bodies. `project_id` works with both filtered and hybrid search.
 - `paput_update_memo` - Update an existing memo.
 - `paput_get_categories` - List available categories.
 
@@ -321,9 +321,10 @@ Search PaPut for existing memos about MCP tool descriptions before creating a ne
 
 Recommended tool flow:
 
-1. `paput_search_memo`
-2. `paput_add_knowledge_candidates` if no duplicate exists
-3. `paput_list_pending_candidates` when the user wants to review pending items
+1. `paput_search_memo` with a query to inspect summary index results
+2. `paput_search_memo` with selected result IDs in `ids` to compare full bodies
+3. `paput_add_knowledge_candidates` if no duplicate exists
+4. `paput_list_pending_candidates` when the user wants to review pending items
 
 ### 2. Capture knowledge from a Codex session
 

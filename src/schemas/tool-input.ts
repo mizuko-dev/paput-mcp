@@ -181,16 +181,27 @@ const toolInputSchemas = {
     memos: z.array(createMemoInputSchema).min(1).describe('Memos to create'),
   }),
   paput_search_memo: z.object({
-    query: z.string().describe('Natural-language or keyword query').optional(),
+    query: z
+      .string()
+      .describe(
+        'Natural-language or keyword query. Returns compact index entries without body unless ids is specified.',
+      )
+      .optional(),
     category_id: z.number().describe('Category ID').optional(),
     memo_type: z
       .enum(['knowledge', 'decision', 'operation', 'principle'])
       .describe('Memo type filter')
       .optional(),
-    ids: z.array(z.number()).describe('Memo IDs').optional(),
+    ids: z
+      .array(z.number())
+      .describe('Memo IDs. When specified, matching results include body.')
+      .optional(),
     date: z.string().describe('Date in YYYY-MM-DD format').optional(),
     is_public: z.boolean().describe('Visibility filter').optional(),
-    project_id: z.number().describe('Project ID filter').optional(),
+    project_id: z
+      .number()
+      .describe('Project ID filter, supported in filter and hybrid search')
+      .optional(),
     page: z
       .number()
       .min(1)

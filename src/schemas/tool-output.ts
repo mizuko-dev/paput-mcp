@@ -28,6 +28,54 @@ const stringArraySchema = {
   type: 'array',
   items: stringSchema,
 } as const;
+const memoIndexProperties = {
+  id: numberSchema,
+  title: stringSchema,
+  summary: stringSchema,
+  is_public: booleanSchema,
+  memo_types: objectArraySchema,
+  categories: objectArraySchema,
+  projects: objectArraySchema,
+  created_at: stringSchema,
+  updated_at: stringSchema,
+  user: objectSchema,
+  score: numberSchema,
+} as const;
+const memoIndexRequired = [
+  'id',
+  'title',
+  'summary',
+  'is_public',
+  'memo_types',
+  'categories',
+  'projects',
+  'created_at',
+  'updated_at',
+  'user',
+] as const;
+const memoIndexSchema = {
+  type: 'object',
+  properties: memoIndexProperties,
+  required: memoIndexRequired,
+  additionalProperties: false,
+} as const;
+const memoDetailSchema = {
+  type: 'object',
+  properties: {
+    ...memoIndexProperties,
+    body: stringSchema,
+  },
+  required: [...memoIndexRequired, 'body'],
+  additionalProperties: false,
+} as const;
+const searchMemoArraySchema = {
+  type: 'array',
+  description:
+    'Index entries by default. Entries include body only when the request specifies ids.',
+  items: {
+    anyOf: [memoIndexSchema, memoDetailSchema],
+  },
+} as const;
 const searchModeSchema = {
   type: 'string',
   enum: ['filter', 'hybrid', 'keyword'],
@@ -77,7 +125,7 @@ const toolOutputSchemas: Record<string, OutputSchema> = {
   }),
   paput_search_memo: outputSchema({
     total: numberSchema,
-    memos: objectArraySchema,
+    memos: searchMemoArraySchema,
     search_mode: searchModeSchema,
   }),
   paput_update_memo: outputSchema({
