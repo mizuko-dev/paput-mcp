@@ -8,6 +8,12 @@ const memoInputSchema = {
       type: 'string',
       description: 'Memo title',
     },
+    summary: {
+      type: 'string',
+      maxLength: 500,
+      description:
+        'One-line summary shown in list and search results (max 500 characters). Optional; when omitted the memo has no summary and listings show none.',
+    },
     body: {
       type: 'string',
       description: 'Memo body',

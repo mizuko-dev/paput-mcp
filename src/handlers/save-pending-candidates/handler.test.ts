@@ -134,6 +134,45 @@ describe('handleSavePendingCandidates', () => {
     ]);
   });
 
+  it('forwards a summary override to the created memo and leaves it empty when omitted', async () => {
+    let created: unknown[] = [];
+    const client = setup({
+      pending: [
+        buildCandidate({ id: 'c1', title: 'T1', body: 'B1' }),
+        buildCandidate({ id: 'c2', title: 'T2', body: 'B2' }),
+      ],
+      createMemos: (memos) => {
+        created = memos;
+        return {
+          success: true,
+          created_count: memos.length,
+          failed_count: 0,
+          created: memos.map((_m, index) => ({
+            index,
+            id: 100 + index,
+            title: `T${index + 1}`,
+          })),
+          failed: [],
+        };
+      },
+    });
+
+    await handleSavePendingCandidates(
+      {
+        candidates: [
+          { candidate_id: 'c1', summary: '保存時に書いた一行要約' },
+          { candidate_id: 'c2' },
+        ],
+      },
+      client,
+    );
+
+    expect((created[0] as { summary?: string }).summary).toBe(
+      '保存時に書いた一行要約',
+    );
+    expect((created[1] as { summary?: string }).summary).toBe('');
+  });
+
   it('skips memo creation and the pending lookup when saved_memo_id is supplied', async () => {
     const client = setup({});
 

@@ -1,6 +1,7 @@
 export interface UpdateMemoParams {
   id: number;
   title: string;
+  summary?: string;
   body: string;
   is_public: boolean;
   categories: Array<{

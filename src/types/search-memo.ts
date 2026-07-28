@@ -37,6 +37,7 @@ export interface MemoProject {
 export interface Memo {
   id: number;
   title: string;
+  summary?: string;
   body: string;
   is_public: boolean;
   created_at: string;

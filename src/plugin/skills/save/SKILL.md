@@ -11,7 +11,7 @@ Review pending knowledge candidates first, then save only candidates explicitly 
 
 1. Fetch pending candidates with `paput_list_pending_candidates`.
 2. Briefly show each candidate title, categories, memo type, summary, and similar memo information.
-3. Save only candidates approved by the user with `paput_save_pending_candidates`. Pass all approved candidates as one `candidates` array in a single call rather than saving one at a time.
+3. Save only candidates approved by the user with `paput_save_pending_candidates`. Pass all approved candidates as one `candidates` array in a single call rather than saving one at a time. Write a `summary` on each approved item: one line, at most 500 characters, stating what the memo decides or establishes so it reads on its own in a list. Base it on the body as it will be saved (after any override), not on the title alone. Omitting it leaves the memo without a summary, and listings show none.
 4. Discard candidates the user rejects with `paput_discard_pending_candidates`, passing them as `{candidates: [{candidate_id, reason?}]}` in one call.
 5. Report the number of saved and discarded candidates.
 

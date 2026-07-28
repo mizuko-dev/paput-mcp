@@ -118,6 +118,13 @@ const bulkItemsSchema = z.array(z.unknown()).min(1);
 
 const createMemoInputSchema = z.object({
   title: z.string().describe('Memo title'),
+  summary: z
+    .string()
+    .max(500)
+    .describe(
+      'One-line summary shown in list and search results (max 500 characters). Optional; when omitted the memo has no summary and listings show none.',
+    )
+    .optional(),
   body: z.string().describe('Memo body'),
   is_public: z.boolean().default(false).describe('Whether to publish the memo'),
   created_at: z
@@ -221,6 +228,13 @@ const toolInputSchemas = {
   paput_update_memo: z.object({
     id: z.number().describe('Memo ID'),
     title: z.string().describe('Memo title'),
+    summary: z
+      .string()
+      .max(500)
+      .describe(
+        'One-line summary shown in list and search results (max 500 characters). Optional; when omitted the memo has no summary and listings show none.',
+      )
+      .optional(),
     body: z.string().describe('Memo body'),
     is_public: z.boolean().describe('Whether to publish the memo'),
     categories: z.array(memoCategorySchema).describe('Categories').optional(),

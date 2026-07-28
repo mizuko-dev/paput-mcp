@@ -11,6 +11,12 @@ const candidateItemSchema = {
         'Existing memo ID to attach when retrying after memo creation succeeded but candidate save failed. Omit for normal saves.',
     },
     title: { type: 'string', description: 'Title override when saving' },
+    summary: {
+      type: 'string',
+      maxLength: 500,
+      description:
+        'One-line summary to write on the created memo (max 500 characters). Pending candidates do not carry a summary, so this is the only way to give the saved memo one. Omitting it leaves the memo without a summary.',
+    },
     body: { type: 'string', description: 'Body override when saving' },
     created_at: {
       type: 'string',

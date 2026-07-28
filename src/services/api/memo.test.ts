@@ -101,6 +101,7 @@ describe('memo API service', () => {
         memos: [
           {
             title: 'Title',
+            summary: '',
             body: 'Body',
             is_public: false,
             created_at: undefined,
@@ -160,6 +161,7 @@ describe('memo API service', () => {
       expect(client.put).toHaveBeenCalledWith('/api/v1/mcp/memo', {
         id: 42,
         title: 'Title',
+        summary: '',
         body: 'Body',
         is_public: true,
         categories: [{ name: 'Go' }],

@@ -55,6 +55,7 @@ export async function handleUpdateMemo(
   const params: UpdateMemoParams = {
     id: args.id,
     title: args.title,
+    ...(typeof args.summary === 'string' ? { summary: args.summary } : {}),
     body: args.body,
     is_public: args.is_public,
     categories,

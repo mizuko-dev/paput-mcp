@@ -34,6 +34,36 @@ describe('handleCreateMemos', () => {
     expect(client.post).not.toHaveBeenCalled();
   });
 
+  it('forwards summary to the API body and defaults it to an empty string', async () => {
+    const client = createMockClient({
+      post: vi.fn().mockResolvedValue({
+        success: true,
+        created_count: 2,
+        failed_count: 0,
+        created: [
+          { index: 0, id: 1, title: 'with summary' },
+          { index: 1, id: 2, title: 'without summary' },
+        ],
+        failed: [],
+      }),
+    });
+
+    await handleCreateMemos(
+      {
+        memos: [
+          { title: 'with summary', summary: '一行要約', body: '本文' },
+          { title: 'without summary', body: '本文' },
+        ],
+      },
+      client,
+    );
+
+    const [, payload] = (client.post as ReturnType<typeof vi.fn>).mock
+      .calls[0] as [string, { memos: Array<Record<string, unknown>> }];
+    expect(payload.memos[0].summary).toBe('一行要約');
+    expect(payload.memos[1].summary).toBe('');
+  });
+
   it('creates multiple memos and forwards normalized params', async () => {
     const client = createMockClient({
       post: vi.fn().mockResolvedValue({
@@ -62,6 +92,7 @@ describe('handleCreateMemos', () => {
       memos: [
         {
           title: 'A',
+          summary: '',
           body: 'a',
           is_public: true,
           created_at: undefined,
@@ -71,6 +102,7 @@ describe('handleCreateMemos', () => {
         },
         {
           title: 'B',
+          summary: '',
           body: 'b',
           is_public: false,
           created_at: undefined,

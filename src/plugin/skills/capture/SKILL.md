@@ -27,6 +27,8 @@ Extract reusable knowledge candidates from the current conversation or a user-sp
 9. If a candidate is reusable, non-duplicate, non-sensitive, not project-specific, and allowed by the capture policy, add it to pending with `paput_add_knowledge_candidates` (including `memo_type_keys`, the real source-session identity — see Source Session Identity — and the source project link — see Project Link) without waiting for user approval.
 10. After adding candidates, briefly report the title, categories, memo type, and candidate ID.
 
+Pending candidates do not carry a memo `summary`. The summary is written when the candidate is saved to PaPut — see the `paput-save` workflow.
+
 ## Source Session Identity
 
 `paput_add_knowledge_candidates` marks the source session as processed, and `paput-harvest` later matches those markers against local session files by the file basename without `.jsonl`. Pass the real session identity whenever the client has a local session file, so captured sessions do not resurface as unprocessed in harvest. Resolve it before calling the tool:

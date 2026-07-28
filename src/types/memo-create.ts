@@ -1,5 +1,6 @@
 export interface CreateMemoParams {
   title: string;
+  summary?: string;
   body: string;
   is_public?: boolean;
   created_at?: string;

@@ -44,6 +44,7 @@ export async function createMemos(
     return await client.post<CreateMemosResponse>('/api/v1/mcp/memos', {
       memos: params.memos.map((memo) => ({
         title: memo.title,
+        summary: memo.summary || '',
         body: memo.body,
         is_public: memo.is_public || false,
         created_at: memo.created_at,
@@ -117,6 +118,7 @@ export async function updateMemo(
     await client.put('/api/v1/mcp/memo', {
       id: params.id,
       title: params.title,
+      summary: params.summary || '',
       body: params.body,
       is_public: params.is_public,
       categories: params.categories,

@@ -10,6 +10,7 @@ import type { PendingKnowledgeCandidate } from '../../types/knowledge.js';
 
 interface CandidateOverrides {
   title?: string;
+  summary?: string;
   body?: string;
   categories?: string[];
   memo_type_keys?: string[];
@@ -301,6 +302,8 @@ export async function handleSavePendingCandidates(
 function parseOverrides(candidate: Record<string, unknown>): CandidateOverrides {
   return {
     title: typeof candidate.title === 'string' ? candidate.title : undefined,
+    summary:
+      typeof candidate.summary === 'string' ? candidate.summary : undefined,
     body: typeof candidate.body === 'string' ? candidate.body : undefined,
     categories: Array.isArray(candidate.categories)
       ? candidate.categories.filter(
@@ -368,6 +371,7 @@ function buildFromCandidate(
 
   const memoParams: CreateMemoParams = {
     title,
+    summary: overrides.summary,
     body,
     is_public: isPublic,
     created_at: createdAt,

@@ -13,6 +13,10 @@ export async function buildCreateMemoParams(
     is_public: typeof args.is_public === 'boolean' ? args.is_public : false,
   };
 
+  if (typeof args.summary === 'string') {
+    params.summary = args.summary;
+  }
+
   if (typeof args.created_at === 'string') {
     params.created_at = args.created_at;
   }
