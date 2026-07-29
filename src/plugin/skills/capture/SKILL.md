@@ -134,6 +134,7 @@ Do not add these to pending:
 
 - Do not save directly to PaPut.
 - Save only to pending. Final PaPut saves are handled by `paput-save`.
+- `paput-promote` is the counterpart exit for saved `principle` memos that should become persistent Claude/Codex behavior; it proposes promotion and requires explicit approval before writing rules.
 - Add safe candidates to pending without waiting for user approval. If a candidate may be duplicate, sensitive, project-specific, too narrow, or ambiguous, present the concern and ask before adding it.
 - Candidates created from past sessions use the source session updated timestamp as the PaPut memo creation timestamp when saved.
 - If there are no candidates, say that no reusable knowledge was found.
