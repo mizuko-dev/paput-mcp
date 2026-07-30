@@ -1,5 +1,5 @@
 import { createRequire } from 'node:module';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/server';
 import { setupTool } from './tool.js';
 import { setupErrorHandling } from './utils/error-handler.js';
 import type {
@@ -20,12 +20,12 @@ export interface MCPServerOptions {
   onboarding?: OnboardingContext;
 }
 
-export function createMcpServer(options: MCPServerOptions = {}): Server {
+export function createMcpServer(options: MCPServerOptions = {}): McpServer {
   const accessToken = options.accessToken;
   const apiUrl =
     options.apiUrl ?? process.env.PAPUT_API_URL ?? 'https://api.paput.io';
 
-  const server = new Server(
+  const server = new McpServer(
     {
       name: 'paput-mcp',
       title: 'PaPut',
@@ -47,9 +47,23 @@ export function createMcpServer(options: MCPServerOptions = {}): Server {
     {
       instructions:
         'When a tool response includes an onboarding notice, offer to guide the user through the initial PaPut setup. Treat the notice as guidance and keep the user in control of any local reads or writes.',
-      capabilities: {
-        tools: {},
-        resources: {},
+      cacheHints: {
+        'server/discover': {
+          ttlMs: 300_000,
+          cacheScope: 'public',
+        },
+        'tools/list': {
+          ttlMs: 300_000,
+          cacheScope: 'private',
+        },
+        'resources/list': {
+          ttlMs: 3_600_000,
+          cacheScope: 'public',
+        },
+        'resources/read': {
+          ttlMs: 300_000,
+          cacheScope: 'private',
+        },
       },
     },
   );

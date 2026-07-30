@@ -7,7 +7,8 @@ import {
   type ServerResponse,
 } from 'node:http';
 import { fileURLToPath } from 'node:url';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { createMcpHandler, type McpServer } from '@modelcontextprotocol/server';
+import { toNodeHandler } from '@modelcontextprotocol/node';
 import { createMcpServer, type MCPServerOptions } from './server.js';
 import {
   createApiClient,
@@ -24,6 +25,7 @@ export interface HttpMcpServerOptions extends MCPServerOptions {
   allowedOrigins?: string[];
   endpoint?: string;
   host?: string;
+  mcpServerFactory?: (options: MCPServerOptions) => McpServer;
   port?: number;
 }
 
@@ -60,6 +62,49 @@ export async function startHttpMcpServer(
   const configuredAllowedOrigins =
     options.allowedOrigins ??
     parseAllowedOrigins(process.env.PAPUT_ALLOWED_ORIGINS);
+  const mcpServerFactory = options.mcpServerFactory ?? createMcpServer;
+  const mcpHandler = createMcpHandler(
+    ({ requestInfo }) => {
+      if (!requestInfo) {
+        throw new Error('HTTP request context is required');
+      }
+      const accessToken = extractBearerToken(
+        requestInfo.headers.get('authorization') ?? undefined,
+      );
+      if (!accessToken) {
+        throw new Error('Validated bearer token is required');
+      }
+      const requestUrl = new URL(requestInfo.url);
+      const projectAlias = normalizeProjectAlias(
+        requestUrl.searchParams.get('project_alias') ??
+          requestUrl.searchParams.get('alias'),
+      );
+      if (projectAlias === false) {
+        throw new Error('Validated project_alias is required');
+      }
+
+      return mcpServerFactory({
+        ...options,
+        accessToken,
+        projectAlias: projectAlias ?? options.projectAlias,
+        resolveProject: projectAlias
+          ? createProjectResolver(apiUrl, accessToken, projectAlias)
+          : options.resolveProject,
+        onboarding: createOnboardingContext(apiUrl, accessToken),
+      });
+    },
+    {
+      legacy: 'stateless',
+      onerror(error) {
+        console.error('MCP HTTP handler error:', error);
+      },
+    },
+  );
+  const nodeMcpHandler = toNodeHandler(mcpHandler, {
+    onerror(error) {
+      console.error('MCP Node adapter error:', error);
+    },
+  });
 
   const httpServer = createServer(async (req, res) => {
     try {
@@ -204,37 +249,10 @@ export async function startHttpMcpServer(
       return;
     }
 
-    // alias の実在確認は handshake で行わない。ここで API を呼ぶと、
-    // トークン失効時に 401 challenge を返せず client の OAuth 回復が壊れる。
-    const mcpServer = createMcpServer({
-      ...options,
-      accessToken,
-      projectAlias: projectAlias ?? options.projectAlias,
-      resolveProject: projectAlias
-        ? createProjectResolver(apiUrl, accessToken, projectAlias)
-        : options.resolveProject,
-      onboarding: createOnboardingContext(apiUrl, accessToken),
-    });
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
-    });
-
-    transport.onerror = (error) => {
-      console.error('MCP HTTP transport error:', error);
-    };
-
-    res.on('close', () => {
-      void transport.close().catch((error) => {
-        console.error('Failed to close MCP HTTP transport:', error);
-      });
-      void mcpServer.close().catch((error) => {
-        console.error('Failed to close MCP server:', error);
-      });
-    });
-
     try {
-      await mcpServer.connect(transport);
-      await transport.handleRequest(req, res, parsedBody);
+      // alias の実在確認は handshake / discover では行わない。factory は
+      // request URL と bearer から request 固有 context を組み立てる。
+      await nodeMcpHandler(req, res, parsedBody);
     } catch (error) {
       console.error('Error handling MCP HTTP request:', error);
       if (!res.headersSent) {
@@ -248,6 +266,12 @@ export async function startHttpMcpServer(
     httpServer.listen(port, host, () => {
       httpServer.off('error', reject);
       resolve();
+    });
+  });
+
+  httpServer.once('close', () => {
+    void mcpHandler.close().catch((error) => {
+      console.error('Failed to close MCP HTTP handler:', error);
     });
   });
 
@@ -585,11 +609,14 @@ async function readRequestBody(
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let bytesRead = 0;
+    let tooLarge = false;
 
     req.on('data', (chunk: Buffer) => {
+      if (tooLarge) return;
       bytesRead += chunk.length;
       if (bytesRead > maxBytes) {
-        req.destroy();
+        tooLarge = true;
+        chunks.length = 0;
         reject(new BodyTooLargeError('Request body too large'));
         return;
       }
@@ -597,6 +624,7 @@ async function readRequestBody(
     });
 
     req.on('end', () => {
+      if (tooLarge) return;
       try {
         resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
       } catch {

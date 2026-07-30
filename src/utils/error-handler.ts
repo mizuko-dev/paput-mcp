@@ -1,12 +1,7 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/server';
 
-export function setupErrorHandling(server: Server): void {
-  server.onerror = (error) => {
+export function setupErrorHandling(server: McpServer): void {
+  server.server.onerror = (error) => {
     console.error('[MCP Error]', error);
   };
-
-  process.on('SIGINT', async () => {
-    await server.close();
-    process.exit(0);
-  });
 }

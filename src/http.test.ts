@@ -8,6 +8,18 @@ import {
   startHttpMcpServer,
 } from './http.js';
 
+const serverFactoryCall = vi.hoisted(() => vi.fn());
+vi.mock('./server.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('./server.js')>();
+  return {
+    ...original,
+    createMcpServer(...args: Parameters<typeof original.createMcpServer>) {
+      serverFactoryCall();
+      return original.createMcpServer(...args);
+    },
+  };
+});
+
 const testServerOptions = {
   apiUrl: 'https://api.example.test',
 };
@@ -29,6 +41,8 @@ describe('HTTP MCP server security handling', () => {
       process.env.PAPUT_PUBLIC_ORIGIN = originalPublicOrigin;
     }
     await Promise.all(servers.splice(0).map(closeHttpServer));
+    serverFactoryCall.mockReset();
+    vi.restoreAllMocks();
   });
 
   async function startTestServer(): Promise<number> {
@@ -218,6 +232,57 @@ describe('HTTP MCP server security handling', () => {
     expect(metadata.resource).toBe('https://mcp.example.test/mcp');
   });
 
+  it('rejects a declared Content-Length above 5 MiB before creating an MCP server', async () => {
+    const port = await startTestServer();
+    const apiFetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('{}', { status: 200 }));
+    const body = oversizedToolCallBody();
+
+    const response = await rawPost(port, {
+      body,
+      headers: { 'content-length': String(Buffer.byteLength(body)) },
+    });
+
+    expect(response.status).toBe(413);
+    expect(JSON.parse(response.body).error.message).toBe(
+      'Request body too large.',
+    );
+    expect(serverFactoryCall).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it('rejects a chunked body above 5 MiB before creating an MCP server', async () => {
+    const port = await startTestServer();
+    const apiFetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('{}', { status: 200 }));
+    const body = oversizedToolCallBody();
+
+    const response = await rawPost(port, { body, chunked: true });
+
+    expect(response.status).toBe(413);
+    expect(JSON.parse(response.body).error.message).toBe(
+      'Request body too large.',
+    );
+    expect(serverFactoryCall).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before creating an MCP server', async () => {
+    const port = await startTestServer();
+    const apiFetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('{}', { status: 200 }));
+
+    const response = await rawPost(port, { body: '{"jsonrpc":' });
+
+    expect(response.status).toBe(400);
+    expect(JSON.parse(response.body).error.message).toBe('Bad request');
+    expect(serverFactoryCall).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
   it('completes the handshake with project_alias without calling the API', async () => {
     // apiUrl は到達不能ホスト。handshake で alias 解決の API を呼ぶと失敗するので、
     // 200 が返ること自体が「解決がツール呼び出し時まで遅延されている」ことの検証になる。
@@ -313,6 +378,66 @@ function rawRequest(
     );
     req.on('error', reject);
     req.end();
+  });
+}
+
+function rawPost(
+  port: number,
+  options: {
+    body: string;
+    headers?: Record<string, string>;
+    chunked?: boolean;
+  },
+): Promise<RawResponse> {
+  return new Promise((resolve, reject) => {
+    const headers: Record<string, string> = {
+      authorization: 'Bearer test-access-token',
+      'content-type': 'application/json',
+      ...options.headers,
+    };
+    if (options.chunked) {
+      headers['transfer-encoding'] = 'chunked';
+    }
+    const req = request(
+      {
+        host: '127.0.0.1',
+        port,
+        method: 'POST',
+        path: '/mcp',
+        headers,
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () =>
+          resolve({
+            status: res.statusCode ?? 0,
+            headers: res.headers,
+            body: Buffer.concat(chunks).toString('utf8'),
+          }),
+        );
+      },
+    );
+    req.on('error', reject);
+    if (options.chunked) {
+      const midpoint = Math.floor(options.body.length / 2);
+      req.write(options.body.slice(0, midpoint));
+      req.end(options.body.slice(midpoint));
+      return;
+    }
+    req.end(options.body);
+  });
+}
+
+function oversizedToolCallBody(): string {
+  return JSON.stringify({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'tools/call',
+    params: {
+      name: 'paput_get_categories',
+      arguments: { padding: 'x'.repeat(5 * 1024 * 1024) },
+    },
   });
 }
 

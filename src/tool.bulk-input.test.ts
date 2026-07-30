@@ -1,5 +1,5 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
+import { McpServer } from '@modelcontextprotocol/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setupTool } from './tool.js';
 
@@ -9,6 +9,8 @@ import { setupTool } from './tool.js';
 
 const API_URL = 'http://localhost:4123';
 const TOKEN = 'test-token';
+const clients: Client[] = [];
+const servers: McpServer[] = [];
 
 type FetchCall = { url: string; method: string; body: unknown };
 
@@ -39,28 +41,32 @@ function installFetch(
   return { calls };
 }
 
-function captureCallTool() {
-  const handlers = new Map<
-    unknown,
-    (request: unknown) => Promise<Record<string, unknown>>
-  >();
-  const fakeServer = {
-    setRequestHandler: (
-      schema: unknown,
-      fn: (request: unknown) => Promise<Record<string, unknown>>,
-    ) => {
-      handlers.set(schema, fn);
-    },
-  } as unknown as Server;
-
-  setupTool(fakeServer, API_URL, TOKEN, {});
-  const callTool = handlers.get(CallToolRequestSchema);
-  if (!callTool) throw new Error('CallTool handler not registered');
-  return callTool;
+async function captureCallTool() {
+  const server = new McpServer({ name: 'bulk-input-test', version: '1.0.0' });
+  setupTool(server, API_URL, TOKEN, {});
+  const client = new Client({
+    name: 'bulk-input-test-client',
+    version: '1.0.0',
+  });
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+  await Promise.all([
+    server.connect(serverTransport),
+    client.connect(clientTransport),
+  ]);
+  clients.push(client);
+  servers.push(server);
+  return (request: {
+    params: { name: string; arguments?: Record<string, unknown> };
+  }) => client.callTool(request.params);
 }
 
 describe('bulk tools tolerate mixed input through setupTool', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    await Promise.allSettled([
+      ...clients.splice(0).map((client) => client.close()),
+      ...servers.splice(0).map((server) => server.close()),
+    ]);
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -73,14 +79,20 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
         payload: {
           success: true,
           marked_count: 1,
-          failed_count: 0,
+          failed_count: 1,
           results: [
             { index: 0, session_id: 'a', status: 'marked', error: null },
+            {
+              index: 1,
+              session_id: 'b',
+              status: 'failed',
+              error: 'not found',
+            },
           ],
         },
       },
     ]);
-    const callTool = captureCallTool();
+    const callTool = await captureCallTool();
 
     const result = await callTool({
       params: {
@@ -88,7 +100,7 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
         arguments: {
           sessions: [
             { source: 'claude', session_id: 'a' },
-            { source: 'cursor', session_id: 'b' },
+            { source: 'codex', session_id: 'b' },
           ],
         },
       },
@@ -96,11 +108,14 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
 
     // 実経路で "Invalid arguments" のツール全体エラーにならないこと。
     expect(JSON.stringify(result.content)).not.toContain('Invalid arguments');
-    // 正常分のみ API へ。
+    // schema 通過後の API 部分失敗でも元 index を維持する。
     const apiCalls = calls.filter((c) => c.method === 'POST');
     expect(apiCalls).toHaveLength(1);
     expect(apiCalls[0].body).toEqual({
-      sessions: [{ source: 'claude', session_id: 'a' }],
+      sessions: [
+        { source: 'claude', session_id: 'a' },
+        { source: 'codex', session_id: 'b' },
+      ],
     });
     expect(result.structuredContent).toMatchObject({
       marked_count: 1,
@@ -122,7 +137,7 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
           success: true,
           created_count: 1,
           updated_count: 0,
-          failed_count: 0,
+          failed_count: 1,
           results: [
             {
               index: 0,
@@ -131,11 +146,18 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
               action: 'created',
               error: null,
             },
+            {
+              index: 1,
+              id: null,
+              title: 'Incomplete',
+              action: 'failed',
+              error: 'rejected',
+            },
           ],
         },
       },
     ]);
-    const callTool = captureCallTool();
+    const callTool = await captureCallTool();
 
     const result = await callTool({
       params: {
@@ -153,7 +175,17 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
               processes: [4],
               memos: [],
             },
-            { title: 'incomplete' },
+            {
+              type: 1,
+              title: 'Incomplete',
+              start_period: '2026-01',
+              description: 'desc',
+              role: 'dev',
+              scale: 'solo',
+              technologies: [{ name: 'Go' }],
+              processes: [4],
+              memos: [],
+            },
           ],
         },
       },
@@ -163,7 +195,7 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
     const apiCalls = calls.filter((c) => c.method === 'POST');
     expect(apiCalls).toHaveLength(1);
     expect((apiCalls[0].body as { projects: unknown[] }).projects).toHaveLength(
-      1,
+      2,
     );
     expect(result.structuredContent).toMatchObject({
       created_count: 1,
@@ -192,13 +224,13 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
         },
       },
     ]);
-    const callTool = captureCallTool();
+    const callTool = await captureCallTool();
 
     const result = await callTool({
       params: {
         name: 'paput_discard_pending_candidates',
         arguments: {
-          candidates: [{ candidate_id: 'c1' }, { reason: 'no id' }],
+          candidates: [{ candidate_id: 'c1' }, { candidate_id: '' }],
         },
       },
     });
@@ -238,7 +270,7 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
         },
       },
     ]);
-    const callTool = captureCallTool();
+    const callTool = await captureCallTool();
 
     const result = await callTool({
       params: {
@@ -246,7 +278,7 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
         arguments: {
           candidates: [
             { candidate_id: 'c1', title: 'Refined title' },
-            { title: 'no id' },
+            { candidate_id: '', title: 'no id' },
           ],
         },
       },
@@ -288,7 +320,7 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
         },
       },
     ]);
-    const callTool = captureCallTool();
+    const callTool = await captureCallTool();
 
     const result = await callTool({
       params: {
@@ -334,7 +366,7 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
         payload: { success: true },
       },
     ]);
-    const callTool = captureCallTool();
+    const callTool = await captureCallTool();
 
     const result = await callTool({
       params: {
@@ -380,7 +412,7 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
         payload: { success: true },
       },
     ]);
-    const callTool = captureCallTool();
+    const callTool = await captureCallTool();
 
     const result = await callTool({
       params: {
@@ -406,22 +438,10 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
       },
     });
 
-    expect(JSON.stringify(result.content)).not.toContain('Invalid arguments');
+    expect(JSON.stringify(result.content)).toContain('Input validation error');
     // 文字列 id を「作成」へ縮退させず、不正任意フィールドも弾く。削除は起きない。
     expect(calls.filter((c) => c.method === 'PUT')).toHaveLength(0);
-    expect(result.structuredContent).toMatchObject({
-      success: false,
-      created_count: 0,
-      updated_count: 0,
-      deleted_count: 0,
-      failed_count: 2,
-      deleted_ids: [],
-    });
-    const results = (
-      result.structuredContent as { results: Array<Record<string, unknown>> }
-    ).results;
-    expect(results[0]).toMatchObject({ index: 0, action: 'failed' });
-    expect(results[1]).toMatchObject({ index: 1, action: 'failed' });
+    expect(result.structuredContent).toBeUndefined();
   });
 
   it('save_pending_candidates: invalid element does not block the valid one', async () => {
@@ -480,13 +500,13 @@ describe('bulk tools tolerate mixed input through setupTool', () => {
         },
       },
     ]);
-    const callTool = captureCallTool();
+    const callTool = await captureCallTool();
 
     const result = await callTool({
       params: {
         name: 'paput_save_pending_candidates',
         arguments: {
-          candidates: [{ candidate_id: 'c1' }, { title: 'no id' }],
+          candidates: [{ candidate_id: 'c1' }, { candidate_id: 'c1' }],
         },
       },
     });

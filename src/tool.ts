@@ -1,17 +1,12 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
-  CallToolRequestSchema,
-  ErrorCode,
-  ListToolsRequestSchema,
-  ListResourcesRequestSchema,
-  McpError,
-  ReadResourceRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+  fromJsonSchema,
+  McpServer,
+  type CallToolResult,
+  type JsonSchemaType,
+  type ReadResourceResult,
+} from '@modelcontextprotocol/server';
 import { createApiClient } from './services/api/index.js';
-import {
-  getGeneratedInputSchema,
-  getToolInputZodSchema,
-} from './schemas/tool-input.js';
+import { getGeneratedInputSchema } from './schemas/tool-input.js';
 import { getToolOutputSchema } from './schemas/tool-output.js';
 import {
   createMemosTool,
@@ -72,7 +67,7 @@ interface RegisteredToolsOptions {
 }
 
 export function setupTool(
-  server: Server,
+  server: McpServer,
   apiUrl: string,
   accessToken?: string,
   context: ToolContext = {},
@@ -88,91 +83,61 @@ export function setupTool(
     projectContextConfigured,
   });
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: tools.map((tool) => tool.definition),
-  }));
-
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const tool = tools.find((t) => t.definition.name === request.params.name);
-
-    if (!tool) {
-      // 未知ツールは仕様上 JSON-RPC の -32602 プロトコルエラーで返す。
-      throw new McpError(
-        ErrorCode.InvalidParams,
-        `Unknown tool: ${request.params.name}`,
-      );
-    }
-
-    // 引数を zod スキーマで実行時検証し不正型を handler に渡さない。
-    const inputSchema = getToolInputZodSchema(request.params.name);
-    if (inputSchema) {
-      const parsed = inputSchema.safeParse(request.params.arguments ?? {});
-      if (!parsed.success) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Invalid arguments for ${request.params.name}: ${parsed.error.issues
-                .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-                .join('; ')}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    }
-
-    const result = await tool.handler(
-      request.params.arguments,
-      apiClient,
-      context,
-    );
-
-    return await processToolResult(request.params.name, result, context);
-  });
-
-  server.setRequestHandler(ListResourcesRequestSchema, async () => ({
-    resources: [
+  for (const tool of tools) {
+    const definition = tool.definition;
+    server.registerTool(
+      definition.name,
       {
-        uri: 'paput://tools',
-        name: 'PaPut MCP tools',
-        description: 'Details of available PaPut MCP tools',
-        mimeType: 'application/json',
+        title: definition.title,
+        description: definition.description,
+        annotations: definition.annotations,
+        inputSchema: fromJsonSchema<Record<string, unknown>>(
+          definition.inputSchema as JsonSchemaType,
+        ),
+        outputSchema: definition.outputSchema
+          ? fromJsonSchema<Record<string, unknown>>(
+              definition.outputSchema as JsonSchemaType,
+            )
+          : undefined,
       },
-    ],
-  }));
+      async (args) => {
+        const result = await tool.handler(args, apiClient, context);
+        return (await processToolResult(
+          definition.name,
+          result,
+          context,
+        )) as CallToolResult;
+      },
+    );
+  }
 
-  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-    if (request.params.uri !== 'paput://tools') {
+  server.registerResource(
+    'PaPut MCP tools',
+    'paput://tools',
+    {
+      description: 'Details of available PaPut MCP tools',
+      mimeType: 'application/json',
+    },
+    async (uri) => {
+      const toolsInfo = tools.map((tool) => ({
+        name: tool.definition.name,
+        description: tool.definition.description,
+        annotations: tool.definition.annotations,
+        inputSchema: tool.definition.inputSchema,
+        outputSchema: tool.definition.outputSchema,
+      }));
+
       return {
         contents: [
           {
-            uri: request.params.uri,
-            mimeType: 'text/plain',
-            text: `Resource not found: ${request.params.uri}`,
+            uri: uri.href,
+            mimeType: 'application/json',
+            text: JSON.stringify(toolsInfo, null, 2),
           },
         ],
-      };
-    }
-
-    const toolsInfo = tools.map((tool) => ({
-      name: tool.definition.name,
-      description: tool.definition.description,
-      annotations: tool.definition.annotations,
-      inputSchema: tool.definition.inputSchema,
-      outputSchema: tool.definition.outputSchema,
-    }));
-
-    return {
-      contents: [
-        {
-          uri: 'paput://tools',
-          mimeType: 'application/json',
-          text: JSON.stringify(toolsInfo, null, 2),
-        },
-      ],
-    };
-  });
+      } satisfies ReadResourceResult;
+    },
+  );
 }
 
 export async function processToolResult(
