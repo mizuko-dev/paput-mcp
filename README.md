@@ -25,7 +25,7 @@ Remote HTTP mode lets Claude, ChatGPT, Codex, Claude Code, and other MCP clients
 - Derive a capture policy from discarded candidates
 - Save pending candidates to PaPut only after explicit user approval
 - Preserve the source session updated timestamp as the PaPut memo creation timestamp
-- Link pending candidates to PaPut projects through `project_alias` in the Remote HTTP MCP URL
+- Link pending candidates to PaPut projects through the connection's `project_alias` (the URL query for connector setups, the `X-PaPut-Project-Alias` header for the plugin)
 - Install Claude/Codex skills and global rules for PaPut workflows
 
 ## Installation
@@ -86,6 +86,10 @@ operations to a project.
   "url": "https://mcp.paput.io/mcp?project_alias=paput"
 }
 ```
+
+The PaPut plugin resolves the project per working directory instead, sending
+the alias in an `X-PaPut-Project-Alias` header so a single connection covers
+every repository. See the plugin README for the `~/.paput/projects` format.
 
 ### Environment Variables
 

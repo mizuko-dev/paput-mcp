@@ -30,6 +30,7 @@ export interface HttpMcpServerOptions extends MCPServerOptions {
 }
 
 const OAUTH_SCOPES = ['paput.read', 'paput.write'] as const;
+const PROJECT_ALIAS_HEADER = 'x-paput-project-alias';
 const MAX_REQUEST_BODY_BYTES = 5 * 1024 * 1024;
 const FRONT_ORIGIN = 'https://paput.io';
 const ONBOARDING_INCOMPLETE_TTL_MS = 10 * 60 * 1000;
@@ -75,9 +76,9 @@ export async function startHttpMcpServer(
         throw new Error('Validated bearer token is required');
       }
       const requestUrl = new URL(requestInfo.url);
-      const projectAlias = normalizeProjectAlias(
-        requestUrl.searchParams.get('project_alias') ??
-          requestUrl.searchParams.get('alias'),
+      const projectAlias = resolveProjectAlias(
+        requestInfo.headers.get(PROJECT_ALIAS_HEADER),
+        requestUrl,
       );
       if (projectAlias === false) {
         throw new Error('Validated project_alias is required');
@@ -235,9 +236,9 @@ export async function startHttpMcpServer(
       return;
     }
 
-    const projectAlias = normalizeProjectAlias(
-      requestUrl.searchParams.get('project_alias') ??
-        requestUrl.searchParams.get('alias'),
+    const projectAlias = resolveProjectAlias(
+      readHeader(req, PROJECT_ALIAS_HEADER),
+      requestUrl,
     );
     if (projectAlias === false) {
       sendJsonRpcError(
@@ -353,6 +354,26 @@ function normalizeEndpoint(endpoint: string): string {
 function resolveEndpoint(pathname: string, endpoint: string): string | null {
   if (pathname === endpoint) return endpoint;
   return null;
+}
+
+function readHeader(req: IncomingMessage, name: string): string | null {
+  const value = req.headers[name];
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+// ヘッダはプラグインが機械生成するため、不正値は接続を落とさず query へ委ねる。
+// query は人が書く設定なので不正値は 400 のまま返す。
+// 有効なヘッダが取れた時点で query は評価しない（不正 query があっても 400 にしない）。
+export function resolveProjectAlias(
+  headerValue: string | null | undefined,
+  url: URL,
+): string | null | false {
+  const fromHeader = normalizeProjectAlias(headerValue ?? null);
+  if (typeof fromHeader === 'string') return fromHeader;
+  return normalizeProjectAlias(
+    url.searchParams.get('project_alias') ?? url.searchParams.get('alias'),
+  );
 }
 
 export function normalizeProjectAlias(

@@ -38,7 +38,7 @@ Clients and assistants should follow these rules:
 
 `paput_create_memos` and `paput_update_memo` link projects only when you pass an
 explicit `projects` array or a `project_match` input. They do not auto-link from
-the Remote HTTP URL `project_alias` context, so a memo with neither stays
+the MCP connection's project context, so a memo with neither stays
 unlinked.
 
 `paput_search_memo` runs a hybrid search: pass `query` for combined
@@ -151,9 +151,11 @@ publicly.
 | `paput_discard_project_proposal`    | Destructive       | Record that the user rejected a skill proposal so it is not raised again.                                                                     |
 | `paput_promote_project_documents`   | Destructive       | Mark a skill proposal and its procedure documents as promoted after a skill is created.                                                       |
 
-When `project_alias` is present in the MCP URL, `paput_get_project_context` is
-called with no arguments and the `project` argument is not exposed. Without a
-URL project context, provide `project` per call.
+When the MCP connection carries a project context (the `project_alias` URL
+query, or the `X-PaPut-Project-Alias` header the plugin sends),
+`paput_get_project_context` is called with no arguments and the `project`
+argument is not exposed. Without a connection project context, provide
+`project` per call.
 
 `paput_get_project_context` returns instructions, pending proposals, and
 document counts only (no document list or bodies). Before drafting a design

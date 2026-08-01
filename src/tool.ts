@@ -293,7 +293,7 @@ export function getRegisteredTools(
 }
 
 const PROJECT_CONTEXT_CONFIGURED_DESCRIPTION =
-  'Get the private project context (always-applied instructions, pending skill proposals, and document counts by kind) for the configured project. The project is resolved automatically from the MCP URL project_alias, so call this with no arguments at session start. Before drafting a design decision, implementation plan, or refactor, search past decisions and rejected alternatives with paput_search_project_documents.';
+  'Get the private project context (always-applied instructions, pending skill proposals, and document counts by kind) for the configured project. The project is resolved automatically from the MCP connection, so call this with no arguments at session start. Before drafting a design decision, implementation plan, or refactor, search past decisions and rejected alternatives with paput_search_project_documents.';
 
 function withConfiguredProjectContext(tool: ToolHandler): ToolHandler {
   if (tool.definition.name !== 'paput_get_project_context') return tool;

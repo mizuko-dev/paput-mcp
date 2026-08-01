@@ -2,7 +2,8 @@
   "mcpServers": {
     "paput": {
       "type": "http",
-      "url": "https://mcp.paput.io/mcp?project_alias=${user_config.project_alias}"
+      "url": "https://mcp.paput.io/mcp",
+      "headersHelper": "sh \"${CLAUDE_PLUGIN_ROOT}/bin/project-header.sh\" \"${CLAUDE_PROJECT_DIR}\""
     }
   }
 }

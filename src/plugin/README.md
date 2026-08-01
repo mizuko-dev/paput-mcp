@@ -44,19 +44,21 @@ All skills are invoked with the `paput` namespace, e.g. `/paput:capture`.
 
 The bundled connection can pin a PaPut project context via a project alias (3–40 lowercase alphanumeric characters).
 
-- **Claude Code**: you are prompted for `Project alias` when enabling the plugin (or pass it at install time with `--config project_alias=<alias>`). Leave it empty to connect without a project.
-- The value is stored once per user and shared across projects. To use a different alias in a specific project, add this to that project's `.claude/settings.local.json`:
+- **Claude Code**: the alias is resolved per project from your working directory, so one plugin install covers every repository. Requires Claude Code v2.1.195 or later, which is when plugin-provided `headersHelper` entries started expanding `${CLAUDE_PROJECT_DIR}`; on older versions the connection still works but never carries a project context. List your projects in `~/.paput/projects`, one per line, as the alias, any run of spaces or a tab, then the absolute path:
 
-```json
-{
-  "pluginConfigs": {
-    "paput@paput": {
-      "options": { "project_alias": "<alias>" }
-    }
-  }
-}
+```
+# alias        path
+paput          /Users/you/repos/paput
+gaikodb        /Users/you/repos/gaiko-db
+mydefault
 ```
 
+- Paths match exactly or as a parent directory, and the longest match wins, so a monorepo subdirectory inherits its parent's alias unless you register it separately. A line with only an alias is the fallback for directories that match nothing.
+- Only the first run of whitespace separates the two columns, so a path containing spaces or tabs stays intact.
+- Edit the file by hand, or let the CLI do it from inside the repository: `npx -y paput-mcp set-project-alias <alias>` registers the current directory, `--list` shows the registrations, and `--remove` drops one. The fallback line is hand-written only — the CLI never adds or removes it.
+- Set `PAPUT_PROJECT_ALIAS` to override the file for a single session (handy in worktrees). Set `PAPUT_HOME` to move `~/.paput` elsewhere.
+- The file is read only from your home directory — the plugin never reads configuration out of the repository you are working in.
+- If the file is missing or no entry matches, the connection is made without a project context.
 - **Codex**: the bundled connection does not take an alias. To pin a project in Codex, configure the MCP server manually with the alias in the URL query (`?project_alias=<alias>`); the plugin-bundled server steps aside automatically when a server named `paput` already exists in your config.
 
 ## Already connected via a custom connector?

@@ -63,7 +63,7 @@ async function getProjectSelector(
     const resolved = await context.resolveProject();
     if (!resolved) {
       throw new Error(
-        `project_alias "${context.projectAlias ?? ''}" was not found. Check the alias in the MCP URL or set it on the skill sheet project.`,
+        `project_alias "${context.projectAlias ?? ''}" was not found. Check the alias your MCP connection sends (the plugin resolves it from ~/.paput/projects; other clients put it in the URL query) or set it on the skill sheet project.`,
       );
     }
     return { project_id: resolved.projectId };

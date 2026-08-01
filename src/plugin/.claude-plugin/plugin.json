@@ -10,13 +10,5 @@
   "homepage": "https://paput.io/mcp-integration",
   "repository": "https://github.com/mizulba-dev/paput-mcp",
   "license": "MIT",
-  "mcpServers": "./mcp/claude.json",
-  "userConfig": {
-    "project_alias": {
-      "type": "string",
-      "title": "Project alias",
-      "description": "Optional PaPut project alias to pin the project context (3-40 lowercase alphanumeric characters). Leave empty to connect without a project.",
-      "default": ""
-    }
-  }
+  "mcpServers": "./mcp/claude.json"
 }
