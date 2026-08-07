@@ -406,7 +406,7 @@ capture state is stored by the PaPut API.
 - **401 Unauthorized / asked to sign in again**: Your access token expired or the connector was disconnected. Reconnect the connector and re-authorize through PaPut OAuth.
 - **A write or delete tool did nothing**: Write and destructive tools require user confirmation. Approve the confirmation prompt in the client before the action runs.
 - **Read/search tools return empty results**: The account has no matching data yet. Create content first (e.g. `paput_create_memos`), then search again.
-- **Still stuck**: Contact `paput.dev@gmail.com` or open an issue at https://github.com/mizulba-dev/paput-mcp/issues.
+- **Still stuck**: Contact `info@paput.io` or open an issue at https://github.com/mizulba-dev/paput-mcp/issues.
 
 ## Public Documents
 

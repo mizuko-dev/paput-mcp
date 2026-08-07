@@ -37,7 +37,7 @@ Recommended listing details:
 - Transport: Streamable HTTP
 - Scopes: `paput.read paput.write`
 - Category: Productivity, knowledge management, developer tools
-- Support contact: paput.dev@gmail.com
+- Support contact: info@paput.io
 - Privacy policy: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/privacy-policy.md
 - Data access summary: Reads and writes PaPut content only after the user authorizes access through PaPut OAuth.
 - Safety summary: Read-only tools are annotated. Write and destructive tools require clear user intent and should be confirmed by the client.

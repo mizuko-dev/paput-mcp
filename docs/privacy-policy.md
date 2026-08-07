@@ -79,4 +79,4 @@ PaPut MCP uses OAuth for remote access and supports read/write tool annotations 
 
 ## Contact
 
-For privacy questions, contact paput.dev@gmail.com (or use the contact method on https://paput.io).
+For privacy questions, contact info@paput.io (or use the contact method on https://paput.io).
