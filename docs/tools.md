@@ -151,8 +151,8 @@ publicly.
 | `paput_discard_project_proposal`    | Destructive       | Record that the user rejected a skill proposal so it is not raised again.                                                                     |
 | `paput_promote_project_documents`   | Destructive       | Mark a skill proposal and its procedure documents as promoted after a skill is created.                                                       |
 
-When the MCP connection carries a project context (the `project_alias` URL
-query, or the `X-PaPut-Project-Alias` header the plugin sends),
+When the MCP connection carries a project context in the
+`X-PaPut-Project-Alias` header,
 `paput_get_project_context` is called with no arguments and the `project`
 argument is not exposed. Without a connection project context, provide
 `project` per call.

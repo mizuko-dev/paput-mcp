@@ -75,13 +75,11 @@ export async function startHttpMcpServer(
       if (!accessToken) {
         throw new Error('Validated bearer token is required');
       }
-      const requestUrl = new URL(requestInfo.url);
       const projectAlias = resolveProjectAlias(
         requestInfo.headers.get(PROJECT_ALIAS_HEADER),
-        requestUrl,
       );
       if (projectAlias === false) {
-        throw new Error('Validated project_alias is required');
+        throw new Error('Validated X-PaPut-Project-Alias is required');
       }
 
       return mcpServerFactory({
@@ -238,21 +236,20 @@ export async function startHttpMcpServer(
 
     const projectAlias = resolveProjectAlias(
       readHeader(req, PROJECT_ALIAS_HEADER),
-      requestUrl,
     );
     if (projectAlias === false) {
       sendJsonRpcError(
         res,
         400,
         -32602,
-        'project_alias must be 3-40 lowercase alphanumeric characters.',
+        'X-PaPut-Project-Alias must be 3-40 lowercase alphanumeric characters.',
       );
       return;
     }
 
     try {
       // alias の実在確認は handshake / discover では行わない。factory は
-      // request URL と bearer から request 固有 context を組み立てる。
+      // project alias header と bearer から request 固有 context を組み立てる。
       await nodeMcpHandler(req, res, parsedBody);
     } catch (error) {
       console.error('Error handling MCP HTTP request:', error);
@@ -362,18 +359,10 @@ function readHeader(req: IncomingMessage, name: string): string | null {
   return value ?? null;
 }
 
-// ヘッダはプラグインが機械生成するため、不正値は接続を落とさず query へ委ねる。
-// query は人が書く設定なので不正値は 400 のまま返す。
-// 有効なヘッダが取れた時点で query は評価しない（不正 query があっても 400 にしない）。
 export function resolveProjectAlias(
   headerValue: string | null | undefined,
-  url: URL,
 ): string | null | false {
-  const fromHeader = normalizeProjectAlias(headerValue ?? null);
-  if (typeof fromHeader === 'string') return fromHeader;
-  return normalizeProjectAlias(
-    url.searchParams.get('project_alias') ?? url.searchParams.get('alias'),
-  );
+  return normalizeProjectAlias(headerValue ?? null);
 }
 
 export function normalizeProjectAlias(

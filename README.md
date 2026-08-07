@@ -25,7 +25,7 @@ Remote HTTP mode lets Claude, ChatGPT, Codex, Claude Code, and other MCP clients
 - Derive a capture policy from discarded candidates
 - Save pending candidates to PaPut only after explicit user approval
 - Preserve the source session updated timestamp as the PaPut memo creation timestamp
-- Link pending candidates to PaPut projects through the connection's `project_alias` (the URL query for connector setups, the `X-PaPut-Project-Alias` header for the plugin)
+- Link pending candidates to PaPut projects through the connection's `X-PaPut-Project-Alias` header
 - Install Claude/Codex skills and global rules for PaPut workflows
 
 ## Installation
@@ -77,19 +77,51 @@ API-backed knowledge capture.
 ```
 
 Pending candidates, processed session markers, and capture policies are
-API-backed. Use `project_alias` in the remote URL when you want to pin
-operations to a project.
+API-backed. Keep the resource URL fixed and use the
+`X-PaPut-Project-Alias` header when you want to pin operations to a project.
+The alias must be 3–40 lowercase alphanumeric characters.
+
+For a manual Claude Code connection, use a JSON `headers` entry:
 
 ```json
-"paput": {
-  "type": "http",
-  "url": "https://mcp.paput.io/mcp?project_alias=paput"
+{
+  "mcpServers": {
+    "paput": {
+      "type": "http",
+      "url": "https://mcp.paput.io/mcp",
+      "headers": {
+        "X-PaPut-Project-Alias": "paput"
+      }
+    }
+  }
 }
 ```
 
-The PaPut plugin resolves the project per working directory instead, sending
-the alias in an `X-PaPut-Project-Alias` header so a single connection covers
-every repository. See the plugin README for the `~/.paput/projects` format.
+For Codex, put the connection in the project's `.codex/config.toml`:
+
+```toml
+[mcp_servers.paput]
+url = "https://mcp.paput.io/mcp"
+http_headers = { "X-PaPut-Project-Alias" = "paput" }
+```
+
+Use `env_http_headers` instead when the header value must come from an
+environment variable:
+
+```toml
+[mcp_servers.paput]
+url = "https://mcp.paput.io/mcp"
+env_http_headers = { "X-PaPut-Project-Alias" = "PAPUT_PROJECT_ALIAS" }
+```
+
+The PaPut Claude Code plugin resolves the project per working directory and
+sends the same header automatically, so a single connection covers every
+repository. See the plugin README for the `~/.paput/projects` format. Clients
+that cannot send custom headers can connect without a pinned project context.
+
+After replacing an older connection URL, restart the client. If it cached OAuth
+authorization for the old resource URL, remove or reauthorize the connection
+and complete OAuth again.
 
 ### Environment Variables
 

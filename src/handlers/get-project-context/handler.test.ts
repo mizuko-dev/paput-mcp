@@ -49,7 +49,7 @@ describe('handleGetProjectContext', () => {
       content: [
         {
           type: 'text',
-          text: 'project is required when no MCP project_alias is configured.',
+          text: 'project is required when no MCP project alias header is configured.',
         },
       ],
       isError: true,
@@ -87,7 +87,7 @@ describe('handleGetProjectContext', () => {
       {
         type: 'text',
         text: expect.stringContaining(
-          'project_alias "unknownalias" was not found',
+          'X-PaPut-Project-Alias value "unknownalias" was not found',
         ),
       },
     ]);

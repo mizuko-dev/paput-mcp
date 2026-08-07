@@ -284,32 +284,30 @@ describe('HTTP MCP server security handling', () => {
     expect(apiFetch).not.toHaveBeenCalled();
   });
 
-  it('completes the handshake with project_alias without calling the API', async () => {
+  it('completes the handshake with a project alias header without calling the API', async () => {
     // apiUrl は到達不能ホスト。handshake で alias 解決の API を呼ぶと失敗するので、
     // 200 が返ること自体が「解決がツール呼び出し時まで遅延されている」ことの検証になる。
     const port = await startTestServer();
 
-    const response = await fetch(
-      `http://127.0.0.1:${port}/mcp?project_alias=paput`,
-      {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          accept: 'application/json, text/event-stream',
-          authorization: 'Bearer some-token',
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'initialize',
-          params: {
-            protocolVersion: '2025-03-26',
-            capabilities: {},
-            clientInfo: { name: 'test', version: '1.0' },
-          },
-        }),
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+        authorization: 'Bearer some-token',
+        'X-PaPut-Project-Alias': 'paput',
       },
-    );
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-03-26',
+          capabilities: {},
+          clientInfo: { name: 'test', version: '1.0' },
+        },
+      }),
+    });
     const body = await response.text();
 
     expect(response.status).toBe(200);
@@ -343,14 +341,14 @@ describe('HTTP MCP server security handling', () => {
 
     expect(response.status).toBe(200);
     expect(body).toContain('"serverInfo"');
-    // ヘッダがクエリより優先されて factory まで届いていること。
+    // query と無関係にヘッダー値が factory まで届いていること。
     expect(serverFactoryCall).toHaveBeenCalled();
     const factoryOptions = serverFactoryCall.mock.calls.at(-1)?.[0];
     expect(factoryOptions?.projectAlias).toBe('gaikodb');
     expect(factoryOptions?.resolveProject).toBeTypeOf('function');
   });
 
-  it('does not reject the request when the project alias header is malformed', async () => {
+  it('rejects a malformed project alias header with a validation error', async () => {
     const port = await startTestServer();
 
     const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
@@ -372,31 +370,46 @@ describe('HTTP MCP server security handling', () => {
         },
       }),
     });
-    const body = await response.text();
-
-    expect(response.status).toBe(200);
-    expect(body).toContain('"serverInfo"');
-  });
-
-  it('rejects a malformed project_alias with a validation error', async () => {
-    const port = await startTestServer();
-
-    const response = await fetch(
-      `http://127.0.0.1:${port}/mcp?project_alias=Bad Alias`,
-      {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          accept: 'application/json, text/event-stream',
-          authorization: 'Bearer some-token',
-        },
-        body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
-      },
-    );
     const body = await response.json();
 
     expect(response.status).toBe(400);
     expect(body.error.code).toBe(-32602);
+    expect(serverFactoryCall).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['project_alias', 'project_alias=paput'],
+    ['alias', 'alias=paput'],
+    ['malformed project_alias', 'project_alias=Bad%20Alias'],
+  ])('ignores the %s query parameter', async (_label, query) => {
+    serverFactoryCall.mockClear();
+    const port = await startTestServer();
+
+    const response = await fetch(`http://127.0.0.1:${port}/mcp?${query}`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+        authorization: 'Bearer some-token',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-03-26',
+          capabilities: {},
+          clientInfo: { name: 'test', version: '1.0' },
+        },
+      }),
+    });
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(body).toContain('"serverInfo"');
+    const factoryOptions = serverFactoryCall.mock.calls.at(-1)?.[0];
+    expect(factoryOptions?.projectAlias).toBeUndefined();
+    expect(factoryOptions?.resolveProject).toBeUndefined();
   });
 
   it('falls back to localhost when the Host header is malformed', async () => {
@@ -531,52 +544,22 @@ describe('normalizeProjectAlias', () => {
 });
 
 describe('resolveProjectAlias', () => {
-  const url = (search = '') => new URL(`https://mcp.example.test/mcp${search}`);
-
   it('reads the alias from the header', () => {
-    expect(resolveProjectAlias('gaikodb', url())).toBe('gaikodb');
+    expect(resolveProjectAlias('gaikodb')).toBe('gaikodb');
   });
 
-  it('prefers the header over both query parameters', () => {
-    expect(
-      resolveProjectAlias('gaikodb', url('?project_alias=paput&alias=other')),
-    ).toBe('gaikodb');
-  });
-
-  it('falls back to the query when no header is present', () => {
-    expect(resolveProjectAlias(null, url('?project_alias=paput'))).toBe(
-      'paput',
-    );
-    expect(resolveProjectAlias(undefined, url('?alias=paput'))).toBe('paput');
-  });
-
-  it('ignores a malformed header and falls through to the query', () => {
-    expect(resolveProjectAlias('Bad Alias', url('?project_alias=paput'))).toBe(
-      'paput',
-    );
-  });
-
-  it('returns no alias for a malformed header without a query', () => {
-    expect(resolveProjectAlias('Bad Alias', url())).toBeNull();
-    expect(resolveProjectAlias('ab', url())).toBeNull();
+  it('returns no alias when the header is absent', () => {
+    expect(resolveProjectAlias(null)).toBeNull();
+    expect(resolveProjectAlias(undefined)).toBeNull();
   });
 
   it('treats an unexpanded placeholder header as no alias', () => {
-    expect(
-      resolveProjectAlias('${user_config.project_alias}', url()),
-    ).toBeNull();
+    expect(resolveProjectAlias('${user_config.project_alias}')).toBeNull();
   });
 
-  it('keeps rejecting a malformed query so the caller can return 400', () => {
-    expect(resolveProjectAlias(null, url('?project_alias=Bad Alias'))).toBe(
-      false,
-    );
-  });
-
-  it('stops evaluating the query once a valid header is found', () => {
-    expect(
-      resolveProjectAlias('gaikodb', url('?project_alias=Bad Alias')),
-    ).toBe('gaikodb');
+  it('rejects a malformed header so the caller can return 400', () => {
+    expect(resolveProjectAlias('Bad Alias')).toBe(false);
+    expect(resolveProjectAlias('ab')).toBe(false);
   });
 });
 

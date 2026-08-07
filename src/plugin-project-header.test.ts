@@ -279,9 +279,18 @@ describe('plugin MCP configuration', () => {
   ) as {
     mcpServers: Record<string, { url: string; headersHelper?: string }>;
   };
+  const codexConfig = JSON.parse(
+    readFileSync(
+      fileURLToPath(new URL('./plugin/mcp/codex.json', import.meta.url)),
+      'utf8',
+    ),
+  ) as {
+    mcpServers: Record<string, { url: string }>;
+  };
 
-  it('keeps the bundled URL free of a project alias query', () => {
+  it('keeps both bundled URLs fixed to the canonical endpoint', () => {
     expect(claudeConfig.mcpServers.paput.url).toBe('https://mcp.paput.io/mcp');
+    expect(codexConfig.mcpServers.paput.url).toBe('https://mcp.paput.io/mcp');
   });
 
   it('wires the headers helper to the bundled script and the project directory', () => {

@@ -12,7 +12,7 @@ export const getProjectContextTool: ToolHandler = {
         project: {
           type: 'string',
           description:
-            'Project name to resolve (partial match allowed). Required only when no MCP project_alias is configured.',
+            'Project name to resolve (partial match allowed). Required only when no MCP project alias header is configured.',
         },
       },
     },

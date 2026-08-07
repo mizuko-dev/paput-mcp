@@ -30,7 +30,7 @@ export async function resolveMemoProjects(
         .map((project) => `${project.title} (ID: ${project.id})`)
         .join(', ');
       throw new Error(
-        `project_match matched multiple projects. Specify projects explicitly or configure MCP project_alias. Candidates: ${candidates}`,
+        `project_match matched multiple projects. Specify projects explicitly or configure the X-PaPut-Project-Alias header. Candidates: ${candidates}`,
       );
     }
     return [projects[0]];

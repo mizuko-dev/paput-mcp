@@ -200,10 +200,13 @@ describe('MCP transports', () => {
       });
       clients.push(client);
       const transport = new StreamableHTTPClientTransport(
-        new URL(`http://127.0.0.1:${address.port}/mcp?project_alias=paput`),
+        new URL(`http://127.0.0.1:${address.port}/mcp`),
         {
           requestInit: {
-            headers: { Authorization: 'Bearer test-access-token' },
+            headers: {
+              Authorization: 'Bearer test-access-token',
+              'X-PaPut-Project-Alias': 'paput',
+            },
           },
         },
       );

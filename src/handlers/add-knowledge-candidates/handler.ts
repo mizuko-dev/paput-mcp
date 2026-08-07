@@ -246,7 +246,7 @@ async function getContextProjects(
     if (!resolved) return [];
     return [{ id: resolved.projectId, title: resolved.projectTitle }];
   } catch (error) {
-    console.error('Failed to resolve project_alias for candidates:', error);
+    console.error('Failed to resolve project alias for candidates:', error);
     return [];
   }
 }

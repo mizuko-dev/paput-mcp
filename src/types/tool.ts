@@ -23,7 +23,7 @@ export interface ToolContext {
   projectId?: number;
   projectTitle?: string;
   projectAlias?: string;
-  // project_alias は handshake でなくツール呼び出し時に解決する契約。
+  // ヘッダーの project alias は handshake でなくツール呼び出し時に解決する契約。
   resolveProject?: () => Promise<ResolvedProjectContext | null>;
   onboarding?: OnboardingContext;
 }

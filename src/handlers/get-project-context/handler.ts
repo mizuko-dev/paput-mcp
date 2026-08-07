@@ -17,7 +17,7 @@ export async function handleGetProjectContext(
         content: [
           {
             type: 'text',
-            text: 'project is required when no MCP project_alias is configured.',
+            text: 'project is required when no MCP project alias header is configured.',
           },
         ],
         isError: true,
@@ -63,7 +63,7 @@ async function getProjectSelector(
     const resolved = await context.resolveProject();
     if (!resolved) {
       throw new Error(
-        `project_alias "${context.projectAlias ?? ''}" was not found. Check the alias your MCP connection sends (the plugin resolves it from ~/.paput/projects; other clients put it in the URL query) or set it on the skill sheet project.`,
+        `The X-PaPut-Project-Alias value "${context.projectAlias ?? ''}" was not found. Check the header your MCP connection sends (the Claude Code plugin resolves it from ~/.paput/projects) or set the alias on the skill sheet project.`,
       );
     }
     return { project_id: resolved.projectId };

@@ -59,7 +59,15 @@ mydefault
 - Set `PAPUT_PROJECT_ALIAS` to override the file for a single session (handy in worktrees). Set `PAPUT_HOME` to move `~/.paput` elsewhere.
 - The file is read only from your home directory — the plugin never reads configuration out of the repository you are working in.
 - If the file is missing or no entry matches, the connection is made without a project context.
-- **Codex**: the bundled connection does not take an alias. To pin a project in Codex, configure the MCP server manually with the alias in the URL query (`?project_alias=<alias>`); the plugin-bundled server steps aside automatically when a server named `paput` already exists in your config.
+- **Codex**: the bundled connection does not take an alias. To pin a project, add a server named `paput` to the project's `.codex/config.toml`; the plugin-bundled server steps aside automatically when that server exists:
+
+```toml
+[mcp_servers.paput]
+url = "https://mcp.paput.io/mcp"
+http_headers = { "X-PaPut-Project-Alias" = "paput" }
+```
+
+Use `env_http_headers = { "X-PaPut-Project-Alias" = "PAPUT_PROJECT_ALIAS" }` instead when the alias must come from an environment variable. Restart Codex after changing the connection. If an older resource URL was already authorized, remove or reauthorize the connection and complete OAuth again.
 
 ## Already connected via a custom connector?
 
