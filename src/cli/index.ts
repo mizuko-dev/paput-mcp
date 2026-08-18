@@ -1,6 +1,7 @@
 import { setupAi } from './setup-ai.js';
 import { exportSkill } from './export-skill.js';
 import { setProjectAlias } from './set-project-alias.js';
+import { projectHeader } from './project-header.js';
 
 export async function runCli(args: string[]): Promise<boolean> {
   const command = args[0];
@@ -35,6 +36,17 @@ export async function runCli(args: string[]): Promise<boolean> {
     return true;
   }
 
+  if (command === 'project-header') {
+    // MCP クライアントの headersHelper から呼ばれる。失敗しても接続を止めないよう、
+    // 例外を空のヘッダ集合へ畳んで必ず exit 0 で返す。
+    try {
+      projectHeader(args.slice(1));
+    } catch {
+      console.log('{}');
+    }
+    return true;
+  }
+
   if (command === '--help' || command === '-h' || command === 'help') {
     printHelp();
     return true;
@@ -55,6 +67,10 @@ function printHelp(): void {
                          Pin a PaPut project for a directory (defaults to the
                          current one). The plugin sends it on connect.
                          --list shows the registrations, --remove [path] drops one.
+  paput-mcp project-header [dir]
+                         Print the PaPut project header as JSON for the given
+                         directory. Called by the plugin on connect; always
+                         exits 0 and prints {} when nothing resolves.
 
 Options:
   --force               Refresh existing PaPut-managed links and rules

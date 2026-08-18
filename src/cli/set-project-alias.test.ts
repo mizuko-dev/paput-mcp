@@ -1,18 +1,13 @@
-import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { projectHeaderJson } from './project-header.js';
 import {
   parseLine,
   projectsFilePath,
   setProjectAlias,
 } from './set-project-alias.js';
-
-const HELPER = fileURLToPath(
-  new URL('../plugin/bin/project-header.sh', import.meta.url),
-);
 
 let home: string;
 let file: string;
@@ -38,13 +33,14 @@ function read(): string {
   return readFileSync(file, 'utf8');
 }
 
-/** 書き込んだ内容を同梱ヘルパが実際に解決できることまで確認する。 */
+/** 書き込んだ内容を headersHelper の実装が実際に解決できることまで確認する。 */
 function resolveWithHelper(projectDir: string): string {
-  const result = spawnSync('sh', [HELPER, projectDir], {
-    encoding: 'utf8',
-    env: { ...process.env, PAPUT_PROJECT_ALIAS: '', PAPUT_HOME: home },
-  });
-  const parsed = JSON.parse(result.stdout) as Record<string, string>;
+  const stdout = projectHeaderJson(projectDir, {
+    ...process.env,
+    PAPUT_PROJECT_ALIAS: '',
+    PAPUT_HOME: home,
+  } as NodeJS.ProcessEnv);
+  const parsed = JSON.parse(stdout) as Record<string, string>;
   return parsed['X-PaPut-Project-Alias'] ?? '';
 }
 

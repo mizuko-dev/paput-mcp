@@ -1,19 +1,9 @@
-import { spawnSync } from 'node:child_process';
-import {
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-
-const SCRIPT = fileURLToPath(
-  new URL('./plugin/bin/project-header.sh', import.meta.url),
-);
+import { projectHeaderJson } from './cli/project-header.js';
 
 const tempDirs: string[] = [];
 
@@ -26,7 +16,6 @@ function withConfig(lines: string[]): string {
 
 interface HelperResult {
   stdout: string;
-  status: number | null;
   /** 出力が JSON オブジェクトとして壊れていないことは契約の一部。 */
   parsed: Record<string, string>;
 }
@@ -35,15 +24,13 @@ function run(
   projectDir: string,
   env: Record<string, string> = {},
 ): HelperResult {
-  const result = spawnSync('sh', [SCRIPT, projectDir], {
-    encoding: 'utf8',
-    env: { ...process.env, PAPUT_PROJECT_ALIAS: '', ...env },
-  });
-  return {
-    stdout: result.stdout,
-    status: result.status,
-    parsed: JSON.parse(result.stdout),
-  };
+  const merged = {
+    ...process.env,
+    PAPUT_PROJECT_ALIAS: '',
+    ...env,
+  } as NodeJS.ProcessEnv;
+  const stdout = projectHeaderJson(projectDir, merged);
+  return { stdout, parsed: JSON.parse(stdout) };
 }
 
 afterEach(() => {
@@ -149,7 +136,7 @@ describe('plugin project header helper', () => {
     });
 
     expect(result.stdout).toBe('{}');
-    expect(result.status).toBe(0);
+    expect(result.stdout.length).toBeGreaterThan(0);
   });
 
   it('degrades to an empty header set when the config is unparseable', () => {
@@ -160,25 +147,23 @@ describe('plugin project header helper', () => {
     const result = run('/repos/paput', { PAPUT_HOME: dir });
 
     expect(result.stdout).toBe('{}');
-    expect(result.status).toBe(0);
+    expect(result.stdout.length).toBeGreaterThan(0);
   });
 
   it('degrades to an empty header set when no project directory is given', () => {
     const cfg = withConfig(['paput\t/repos/paput']);
-    const result = spawnSync('sh', [SCRIPT], {
-      encoding: 'utf8',
-      env: { ...process.env, PAPUT_PROJECT_ALIAS: '', PAPUT_HOME: cfg },
-    });
+    const result = run('', { PAPUT_HOME: cfg });
 
     expect(result.stdout).toBe('{}');
-    expect(result.status).toBe(0);
+    expect(result.stdout.length).toBeGreaterThan(0);
   });
 
-  it('exits with code 0 on every resolution path', () => {
+  it('never throws on any resolution path', () => {
     const cfg = withConfig(['paput\t/repos/paput']);
 
-    expect(run('/repos/paput', { PAPUT_HOME: cfg }).status).toBe(0);
-    expect(run('/repos/elsewhere', { PAPUT_HOME: cfg }).status).toBe(0);
+    for (const dir of ['/repos/paput', '/repos/elsewhere', '', '${CLAUDE_PROJECT_DIR}']) {
+      expect(() => projectHeaderJson(dir, { PAPUT_HOME: cfg } as NodeJS.ProcessEnv)).not.toThrow();
+    }
   });
 
   it('rejects a multi-line alias instead of emitting broken JSON', () => {
@@ -190,24 +175,15 @@ describe('plugin project header helper', () => {
     });
 
     expect(result.parsed).toEqual({});
-    expect(result.status).toBe(0);
+    expect(result.stdout.length).toBeGreaterThan(0);
   });
 
   it('degrades to an empty header set when HOME is unset', () => {
-    const result = spawnSync('sh', [SCRIPT, '/repos/paput'], {
-      encoding: 'utf8',
-      env: Object.fromEntries(
-        Object.entries(process.env).filter(
-          ([key]) =>
-            key !== 'HOME' &&
-            key !== 'PAPUT_HOME' &&
-            key !== 'PAPUT_PROJECT_ALIAS',
-        ),
-      ) as NodeJS.ProcessEnv,
-    });
+    const stdout = projectHeaderJson('/repos/paput', {} as NodeJS.ProcessEnv);
 
-    expect(JSON.parse(result.stdout)).toEqual({});
-    expect(result.status).toBe(0);
+    const result = { stdout, parsed: JSON.parse(stdout) };
+    expect(result.parsed).toEqual({});
+    expect(result.stdout.length).toBeGreaterThan(0);
   });
 
   it('accepts spaces as the separator so the documented example works verbatim', () => {
@@ -293,11 +269,15 @@ describe('plugin MCP configuration', () => {
     expect(codexConfig.mcpServers.paput.url).toBe('https://mcp.paput.io/mcp');
   });
 
-  it('wires the headers helper to the bundled script and the project directory', () => {
+  it('wires the headers helper to the npm CLI and the project directory', () => {
     const helper = claudeConfig.mcpServers.paput.headersHelper ?? '';
 
-    expect(helper).toContain('${CLAUDE_PLUGIN_ROOT}/bin/project-header.sh');
+    // 配布物へ実行可能スクリプトを同梱すると Claude Desktop が marketplace ごと拒否する。
+    // helper は npm パッケージのサブコマンドを呼ぶ形に保つ。
+    expect(helper).toContain('paput-mcp project-header');
     expect(helper).toContain('${CLAUDE_PROJECT_DIR}');
-    expect(existsSync(SCRIPT)).toBe(true);
+    expect(helper).not.toContain('.sh');
+    expect(helper).not.toContain('CLAUDE_PLUGIN_ROOT');
   });
+
 });
