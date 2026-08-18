@@ -9,18 +9,18 @@ A PaPut account is required. On first tool use, the MCP client runs the OAuth fl
 ### Claude Code
 
 ```
-/plugin marketplace add mizulba-dev/paput-mcp
+/plugin marketplace add mizulba-dev/paput
 /plugin install paput@paput
 ```
 
 ### claude.ai / Claude Desktop / Cowork
 
-Open **Customize > Plugins**, add `mizulba-dev/paput-mcp` as a marketplace from GitHub, then install **paput**.
+Open **Customize > Plugins**, add `mizulba-dev/paput` as a marketplace from GitHub, then install **paput**.
 
 ### Codex (App / CLI / VS Code)
 
 ```
-codex plugin marketplace add mizulba-dev/paput-mcp
+codex plugin marketplace add mizulba-dev/paput
 codex plugin add paput@paput
 ```
 

@@ -432,7 +432,7 @@ function sendLandingPage(res: ServerResponse, headOnly = false): void {
       This is the remote Model Context Protocol server for
       <a href="https://paput.io">PaPut</a>. MCP clients should use
       <code>https://mcp.paput.io/mcp</code> and connect over HTTP POST with OAuth.
-      See <a href="https://github.com/mizulba-dev/paput-mcp">the documentation</a>.
+      See <a href="https://github.com/mizulba-dev/paput">the documentation</a>.
     </p>
   </body>
 </html>

@@ -34,7 +34,8 @@
   "homepage": "https://paput.io",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mizulba-dev/paput-mcp.git"
+    "url": "git+https://github.com/mizulba-dev/paput.git",
+    "directory": "mcp"
   },
   "files": [
     "dist",
