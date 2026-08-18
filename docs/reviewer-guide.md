@@ -70,4 +70,4 @@ scope.
 - The connector accesses PaPut content only after OAuth authorization and does
   not read Claude memory, chat history, or user files.
 - Support contact: `info@paput.io`
-- Privacy policy: https://github.com/mizulba-dev/paput/blob/main/mcp/docs/privacy-policy.md
+- Privacy policy: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/privacy-policy.md

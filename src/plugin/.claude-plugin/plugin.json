@@ -8,7 +8,7 @@
     "url": "https://paput.io"
   },
   "homepage": "https://paput.io/mcp-integration",
-  "repository": "https://github.com/mizulba-dev/paput",
+  "repository": "https://github.com/mizulba-dev/paput-mcp",
   "license": "MIT",
   "mcpServers": "./mcp/claude.json"
 }

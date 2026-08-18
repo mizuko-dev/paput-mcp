@@ -38,7 +38,7 @@ Recommended listing details:
 - Scopes: `paput.read paput.write`
 - Category: Productivity, knowledge management, developer tools
 - Support contact: info@paput.io
-- Privacy policy: https://github.com/mizulba-dev/paput/blob/main/mcp/docs/privacy-policy.md
+- Privacy policy: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/privacy-policy.md
 - Data access summary: Reads and writes PaPut content only after the user authorizes access through PaPut OAuth.
 - Safety summary: Read-only tools are annotated. Write and destructive tools require clear user intent and should be confirmed by the client.
 - Callback URL handling: Claude registers its redirect URI through dynamic client registration. PaPut validates the registered redirect URI during authorization instead of relying on a preconfigured static callback URL.
@@ -95,10 +95,10 @@ PaPut MCP should be submitted as a data-only MCP connector. It should not reques
 
 ## Public References
 
-- Privacy Policy: https://github.com/mizulba-dev/paput/blob/main/mcp/docs/privacy-policy.md
-- Usage Examples: https://github.com/mizulba-dev/paput/blob/main/mcp/docs/usage-examples.md
-- Tools And Use Cases: https://github.com/mizulba-dev/paput/blob/main/mcp/docs/tools.md
-- Directory Submission Notes: https://github.com/mizulba-dev/paput/blob/main/mcp/docs/directory-submission.md
+- Privacy Policy: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/privacy-policy.md
+- Usage Examples: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/usage-examples.md
+- Tools And Use Cases: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/tools.md
+- Directory Submission Notes: https://github.com/mizulba-dev/paput-mcp/blob/main/docs/directory-submission.md
 - OpenAI ChatGPT Developer Mode documentation: https://platform.openai.com/docs/guides/developer-mode
 - OpenAI MCP documentation: https://platform.openai.com/docs/mcp/
 - Anthropic remote MCP connector documentation: https://support.anthropic.com/en/articles/11175166-getting-started-with-custom-integrations-using-remote-mcp
