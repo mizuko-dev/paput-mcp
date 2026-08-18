@@ -11,7 +11,11 @@
     {
       "name": "paput",
       "displayName": "PaPut",
-      "source": "./src/plugin",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/mizulba-dev/paput-mcp.git",
+        "path": "src/plugin"
+      },
       "description": "PaPut — turn AI-assisted work into a verifiable knowledge and judgment portfolio. Bundles the PaPut remote MCP server connection and skills for capturing, reviewing, and publishing reusable knowledge.",
       "homepage": "https://paput.io/mcp-integration"
     }
