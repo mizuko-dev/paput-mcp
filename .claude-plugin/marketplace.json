@@ -1,11 +1,12 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "paput",
+  "version": "1.0.0",
+  "description": "PaPut plugin marketplace — knowledge and judgment portfolio for AI-assisted development",
   "owner": {
     "name": "mizulba",
+    "email": "info@paput.io",
     "url": "https://paput.io"
-  },
-  "metadata": {
-    "description": "PaPut plugin marketplace — knowledge and judgment portfolio for AI-assisted development"
   },
   "plugins": [
     {
