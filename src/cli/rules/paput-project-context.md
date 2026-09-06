@@ -4,7 +4,7 @@ At the start of a session, when the current project is known or can be inferred 
 
 Before drafting a design decision, implementation plan, or refactor direction, search past decisions and rejected alternatives with `paput_search_project_documents` so you do not re-propose a rejected alternative or contradict a settled decision. Fetch a document body on demand with `paput_get_project_document` only for the results that matter.
 
-This section is the procedure for Check 1 of the PaPut Completion Checklist. When a design decision is settled or a repeatable procedure is completed, save it with `paput_add_project_document` (kind `design_doc` or `procedure`) and report what you saved. For design decisions, include the decision, the reasons, and the rejected alternatives. Do not save repository conventions or anything that belongs in CLAUDE.md / AGENTS.md, and do not save secrets or customer data. Follow the `paput-project-document` skill for the full procedure.
+This is the policy boundary for Check 1. When a project-specific design decision is settled or a repeatable project procedure is completed, follow `paput-project-document`, save it with `paput_add_project_document` (`design_doc` or `procedure`), and report what was saved. That skill defines the required decision record and exclusions.
 
 Before calling `paput_update_project_instructions`, always get explicit user approval in the conversation, because instructions are applied to every future session.
 
